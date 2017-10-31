@@ -13,6 +13,7 @@ import java.nio.ByteBuffer;
 public abstract class SpriteManipulator {
 	public static final int SPRITESIZE = 896 * 32; // invariable lengths
 	public static final int RASTERSIZE = 128 * 448 * 4;
+	public static final int INDEXEDRASTERSIZE = 128 * 448;
 
 	// format of snes 4bpp {row (r), bit plane (b)}
 	// bit plane 0 indexed such that 1011 corresponds to 0123
@@ -41,7 +42,71 @@ public abstract class SpriteManipulator {
 			{ 120, 48, -96},
 			{ -8, -8, -8}
 	};
+	/**
+	 * Turn the image into an array of 8x8 blocks.
+	 * Assumes ABGR color space.
+	 * <br><br>
+	 * If a color matches an index that belongs to one of the latter 3 mails
+	 * but does not match anything in green mail
+	 * then it is treated as the color at the corresponding index of green mail.
+	 * 
+	 * @param pixels - aray of color indices
+	 * @param pal - palette colors
+	 * @return <b>byte[][][]</b> representing the image as a grid of color indices
+	 */
+	public static byte[][][] get8x8(byte[] pixels, int[] pal) {
+		int dis = RASTERSIZE;
+		int largeCol = 0;
+		int intRow = 0;
+		int intCol = 0;
+		int index = 0;
 
+		// all 8x8 squares, read left to right, top to bottom
+		byte[][][] eightbyeight = new byte[896][8][8];
+
+		// read image
+		for (int i = 0; i < dis; i++) {
+			// get each color and get rid of sign
+			// colors are stored as {A,B,G,R,A,B,G,R...}
+			int b = unsignByte(pixels[i*4+1]);
+			int g = unsignByte(pixels[i*4+2]);
+			int r = unsignByte(pixels[i*4+3]);
+
+			// convert to 9 digits
+			int rgb = (1000000 * r) + (1000 * g) + b;
+
+			// find palette index of current pixel
+			for (int s = 0; s < pal.length; s++) {
+				   if (pal[s] == rgb) {
+					eightbyeight[index][intRow][intCol] = (byte) (s % 16); // mod 16 in case it reads another mail
+					break;
+				}
+			}
+
+			// count up square by square
+			// at 8, reset the "Interior column" which we use to locate the pixel in 8x8
+			// increments the "Large column", which is the index of the 8x8 sprite on the sheet
+			// at 16, reset the index and move to the next row
+			// (so we can wrap around back to our old 8x8)
+			// after 8 rows, undo the index reset, and move on to the next super row
+			intCol++;
+			if (intCol == 8) {
+				index++;
+				largeCol++;
+				intCol = 0;
+				if (largeCol == 16) {
+					index -= 16;
+					largeCol = 0;
+					intRow++;
+					if (intRow == 8) {
+						index += 16;
+						intRow = 0;
+					}
+				}
+			}
+		}
+		return eightbyeight;
+	}
 	/**
 	 * Takes a sprite and turns it into 896 blocks of 8x8 pixels
 	 * @param sprite
@@ -420,7 +485,7 @@ public abstract class SpriteManipulator {
 		byte[] pixels = ((DataBufferByte) img.getRaster().getDataBuffer()).getData();
 		return pixels;
 	}
-	
+
 	public static byte[] readFile(String path) throws IOException {
 		File file = new File(path);
 		byte[] ret = new byte[(int) file.length()];
@@ -459,6 +524,19 @@ public abstract class SpriteManipulator {
 	 */
 	public static String getFileType(String s) {
 		String ret = s.substring(s.lastIndexOf(".") + 1);
+		return ret;
+	}
+	
+	/**
+	 * 
+	 */
+	public static byte[][] convertArray(int[][] c) {
+		byte[][] ret = new byte[c.length][c[0].length];
+		for (int i = 0; i < ret.length; i++) {
+			for (int j = 0; j < ret[i].length; j++) {
+				ret[i][j] = (byte) c[i][j];
+			}
+		}
 		return ret;
 	}
 }
