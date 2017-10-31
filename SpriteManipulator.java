@@ -55,7 +55,7 @@ public abstract class SpriteManipulator {
 	 * @return <b>byte[][][]</b> representing the image as a grid of color indices
 	 */
 	public static byte[][][] get8x8(byte[] pixels, int[] pal) {
-		int dis = RASTERSIZE;
+		int dis = INDEXEDRASTERSIZE;
 		int largeCol = 0;
 		int intRow = 0;
 		int intCol = 0;
