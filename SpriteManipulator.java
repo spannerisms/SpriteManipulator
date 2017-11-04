@@ -47,7 +47,7 @@ public abstract class SpriteManipulator {
 			{ -8, -8, -8}
 	};
 	/**
-	 * Turn the image into an array of 8x8 blocks.
+	 * Indexes an image based on a palette.
 	 * Assumes ABGR color space.
 	 * <br><br>
 	 * If a color matches an index that belongs to one of the latter 3 mails
@@ -58,15 +58,11 @@ public abstract class SpriteManipulator {
 	 * @param pal - palette colors
 	 * @return <b>byte[][][]</b> representing the image as a grid of color indices
 	 */
-	public static byte[][][] get8x8(byte[] pixels, int[] pal) {
+	public static byte[] index(byte[] pixels, int[] pal) {
 		int dis = INDEXED_RASTER_SIZE;
-		int largeCol = 0;
-		int intRow = 0;
-		int intCol = 0;
-		int index = 0;
 
 		// all 8x8 squares, read left to right, top to bottom
-		byte[][][] eightbyeight = new byte[896][8][8];
+		byte[] ret = new byte[SPRITE_SIZE];
 
 		// read image
 		for (int i = 0; i < dis; i++) {
@@ -81,11 +77,40 @@ public abstract class SpriteManipulator {
 
 			// find palette index of current pixel
 			for (int s = 0; s < pal.length; s++) {
-				   if (pal[s] == rgb) {
-					eightbyeight[index][intRow][intCol] = (byte) (s % 16); // mod 16 in case it reads another mail
+				if (pal[s] == rgb) {
+					ret[i] = (byte) (s % 16); // mod 16 in case it reads another mail
 					break;
 				}
 			}
+		}
+		return ret;
+	}
+
+	/**
+	 * Turn the image into an array of 8x8 blocks.
+	 * Assumes ABGR color space.
+	 * <br><br>
+	 * If a color matches an index that belongs to one of the latter 3 mails
+	 * but does not match anything in green mail
+	 * then it is treated as the color at the corresponding index of green mail.
+	 * 
+	 * @param pixels - aray of color indices
+	 * @param pal - palette colors
+	 * @return <b>byte[][][]</b> representing the image as a grid of color indices
+	 */
+	public static byte[][][] get8x8(byte[] pixels) {
+		int dis = INDEXED_RASTER_SIZE;
+		int largeCol = 0;
+		int intRow = 0;
+		int intCol = 0;
+		int index = 0;
+
+		// all 8x8 squares, read left to right, top to bottom
+		byte[][][] eightbyeight = new byte[896][8][8];
+
+		// read image
+		for (int i = 0; i < dis; i++) {
+			eightbyeight[index][intRow][intCol] = pixels[i];
 
 			// count up square by square
 			// at 8, reset the "Interior column" which we use to locate the pixel in 8x8
@@ -111,6 +136,16 @@ public abstract class SpriteManipulator {
 		}
 		return eightbyeight;
 	}
+
+	/**
+	 * Indexes a sprite and turns into 8x8 in one go.
+	 */
+	public static byte[][][] indexAnd8x8(byte[] pixels, int[] palette) {
+		return get8x8(
+					index(pixels, palette)
+				);
+	}
+
 	/**
 	 * Takes a sprite and turns it into 896 blocks of 8x8 pixels
 	 * @param sprite
@@ -349,7 +384,7 @@ public abstract class SpriteManipulator {
 	 * @param rando - palette indices to randomize
 	 * @return new byte array in SNES4BPP format
 	 */
-	public static byte[] exportPNG(byte[][][] eightbyeight, byte[] palData) {
+	public static byte[] exportToSPR(byte[][][] eightbyeight, byte[] palData) {
 
 		// format of SNES 4bpp {row (r), bit plane (b)}
 		// bit plane 0 indexed such that 1011 corresponds to 0123
@@ -449,7 +484,7 @@ public abstract class SpriteManipulator {
 			fileOuputStream.close();
 		}
 	}
-	
+
 	/**
 	 * Takes every color in a palette and rounds each byte to the nearest 8.
 	 * @param pal - palette to round
@@ -482,12 +517,12 @@ public abstract class SpriteManipulator {
 		}
 		return ret;
 	}
-	
+
 	public static int roundVal(int v) {
 		int ret = (v / 8) * 8;
 		return ret;
 	}
-	
+
 	/**
 	 * Rounds each color value to the nearest 8, and concatenates them into a single number
 	 * whose digits are RRRGGGBBB
@@ -501,7 +536,7 @@ public abstract class SpriteManipulator {
 		b = roundVal(b);
 		return (r * 1000000) + (g * 1000) + b;
 	}
-	
+
 	/**
 	 * Converts to ABGR colorspace
 	 * @param img - image to convert
@@ -515,7 +550,7 @@ public abstract class SpriteManipulator {
 		rgb.filter(img,ret);
 		return ret;
 	}
-	
+
 	/**
 	 * Get the full image raster
 	 * @param img - image to read
@@ -543,7 +578,7 @@ public abstract class SpriteManipulator {
 
 		return ret;
 	}
-	
+
 	/**
 	 * Test a file against a single extension.
 	 * 
@@ -555,7 +590,7 @@ public abstract class SpriteManipulator {
 		String filesType = getFileType(s);
 		return filesType.equalsIgnoreCase(type);
 	}
-	
+
 	/**
 	 * gives file extension name from a string
 	 * @param s - test case
@@ -565,7 +600,7 @@ public abstract class SpriteManipulator {
 		String ret = s.substring(s.lastIndexOf(".") + 1);
 		return ret;
 	}
-	
+
 	/**
 	 * 
 	 */
