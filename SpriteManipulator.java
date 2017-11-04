@@ -314,8 +314,21 @@ public abstract class SpriteManipulator {
 	 * @throws IOException
 	 * @throws FileNotFoundException
 	 */
-	public static byte[] sprFromRom(String romPath) throws IOException, FileNotFoundException {
+	public static byte[] sprFromRomName(String romPath) throws IOException, FileNotFoundException {
 		byte[] ROM = readFile(romPath);
+		byte[] ret = sprFromRom(ROM);
+
+		return ret;
+	}
+
+	/**
+	 * Reads a ROM to create a SPR file data stream.
+	 * @param ROM
+	 * @return
+	 * @throws IOException
+	 * @throws FileNotFoundException
+	 */
+	public static byte[] sprFromRom(byte[] ROM) throws IOException {
 		byte[] ret = new byte[SPRITE_SIZE+PAL_DATA_SIZE];
 
 		for (int i = 0; i < SPRITE_SIZE; i++) {
