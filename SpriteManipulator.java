@@ -592,6 +592,25 @@ public abstract class SpriteManipulator {
 	}
 
 	/**
+	 * Test a file against multiple extensions
+	 * 
+	 * @param s - file name or extension
+	 * @param type - extensions
+	 * @return <tt>true</tt> if extension is matched
+	 */
+	public static boolean testFileType(String s, String[] type) {
+		String filesType = getFileType(s);
+		boolean match = false;
+		for (String t : type) {
+			if (filesType.equalsIgnoreCase(t)) {
+				match = true;
+				break;
+			}
+		}
+		return match;
+	}
+
+	/**
 	 * gives file extension name from a string
 	 * @param s - test case
 	 * @return extension type
