@@ -11,9 +11,13 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 public abstract class SpriteManipulator {
-	public static final int SPRITESIZE = 896 * 32; // invariable lengths
-	public static final int RASTERSIZE = 128 * 448 * 4;
-	public static final int INDEXEDRASTERSIZE = 128 * 448;
+	// class constants
+	public static final int SPRITE_SIZE = 896 * 32;
+	public static final int PAL_DATA_SIZE = 0x78;
+	public static final int SPRITE_OFFSET = 0x80000;
+	public static final int PAL_OFFSET = 0x0DD308;
+	public static final int RASTER_SIZE = 128 * 448 * 4;
+	public static final int INDEXED_RASTER_SIZE = 128 * 448;
 
 	// format of snes 4bpp {row (r), bit plane (b)}
 	// bit plane 0 indexed such that 1011 corresponds to 0123
@@ -55,7 +59,7 @@ public abstract class SpriteManipulator {
 	 * @return <b>byte[][][]</b> representing the image as a grid of color indices
 	 */
 	public static byte[][][] get8x8(byte[] pixels, int[] pal) {
-		int dis = INDEXEDRASTERSIZE;
+		int dis = INDEXED_RASTER_SIZE;
 		int largeCol = 0;
 		int intRow = 0;
 		int intCol = 0;
@@ -119,7 +123,7 @@ public abstract class SpriteManipulator {
 		int b = -1;
 		// locate where in interlacing map we're reading from
 		int g;
-		for (int i = 0; i < SPRITESIZE; i++) {
+		for (int i = 0; i < SPRITE_SIZE; i++) {
 			// find interlacing index
 			g = i%32;
 			// increment at 0th index
@@ -162,7 +166,7 @@ public abstract class SpriteManipulator {
 				ret[0][2] = 0;
 			} else {
 				short color = 0;
-				int pos = SPRITESIZE + (byteLoc++ * 2) - 2;
+				int pos = SPRITE_SIZE + (byteLoc++ * 2) - 2;
 				color = (short) unsignByte(sprite[pos+1]);
 				color <<= 8;
 				color |= (short) unsignByte(sprite[pos]);
@@ -180,14 +184,14 @@ public abstract class SpriteManipulator {
 	 * Turn index map in 8x8 format into an array of ABGR values
 	 */
 	public static byte[] makeRaster(byte[][][] ebe, byte[][] palette) {
-		byte[] ret = new byte[RASTERSIZE];
+		byte[] ret = new byte[RASTER_SIZE];
 		int largeCol = 0;
 		int intRow = 0;
 		int intCol = 0;
 		int index = 0;
 		byte[] color;
 		// read image
-		for (int i = 0; i < RASTERSIZE / 4; i++) {
+		for (int i = 0; i < RASTER_SIZE / 4; i++) {
 			// get pixel color index
 			byte coli = ebe[index][intRow][intCol];
 			// get palette color
@@ -279,7 +283,7 @@ public abstract class SpriteManipulator {
 		int ret = (b + 256) % 256;
 		return ret;
 	}
-	
+
 	public static void patchRom(byte[] spr, String romTarget) throws IOException, FileNotFoundException {
 		// Acquire ROM data
 		byte[] rom_patch;
@@ -292,17 +296,39 @@ public abstract class SpriteManipulator {
 		// filestream save .spr file to ROM
 		FileOutputStream fsOut = new FileOutputStream(romTarget);
 
-		for(int i = 0;i<0x7000;i++) {
-			rom_patch[0x80000 + i] = spr[i];
+		for(int i = 0; i < SPRITE_SIZE; i++) {
+			rom_patch[SPRITE_OFFSET + i] = spr[i];
 		}
-		for (int i = 0; i < 0x78; i++) {
-			rom_patch[0x0DD308 + i] = spr[i+0x7000];
+		for (int i = 0; i < PAL_DATA_SIZE; i++) {
+			rom_patch[PAL_OFFSET + i] = spr[i+SPRITE_SIZE];
 		}
 		fsOut.write(rom_patch, 0, rom_patch.length);
 
 		fsOut.close();
 	}
-	
+
+	/**
+	 * Reads a ROM to create a SPR file data stream.
+	 * @param romPath
+	 * @return
+	 * @throws IOException
+	 * @throws FileNotFoundException
+	 */
+	public static byte[] sprFromRom(String romPath) throws IOException, FileNotFoundException {
+		byte[] ROM = readFile(romPath);
+		byte[] ret = new byte[SPRITE_SIZE+PAL_DATA_SIZE];
+
+		for (int i = 0; i < SPRITE_SIZE; i++) {
+			ret[i] = ROM[SPRITE_OFFSET + i];
+		}
+
+		for (int i = 0; i < PAL_DATA_SIZE; i++) {
+			ret[i+SPRITE_SIZE] = ROM[PAL_OFFSET + i];
+		}
+
+		return ret;
+	}
+
 	/**
 	 * Converts an index map into a proper 4BPP (SNES) byte map.
 	 * @param eightbyeight - color index map
