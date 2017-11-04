@@ -62,7 +62,7 @@ public abstract class SpriteManipulator {
 		int dis = INDEXED_RASTER_SIZE;
 
 		// all 8x8 squares, read left to right, top to bottom
-		byte[] ret = new byte[SPRITE_SIZE];
+		byte[] ret = new byte[INDEXED_RASTER_SIZE];
 
 		// read image
 		for (int i = 0; i < dis; i++) {
