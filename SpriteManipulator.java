@@ -150,7 +150,7 @@ public abstract class SpriteManipulator {
 	 * Takes a sprite and turns it into 896 blocks of 8x8 pixels
 	 * @param sprite
 	 */
-	public static byte[][][] sprTo8x8(byte[] sprite) {
+	public static byte[][][] makeSpr8x8(byte[] sprite) {
 		byte[][][] ret = new byte[896][8][8];
 
 		// current block we're working on, each sized 32
@@ -372,9 +372,9 @@ public abstract class SpriteManipulator {
 	 * @throws IOException
 	 * @throws FileNotFoundException
 	 */
-	public static byte[] sprFromRomName(String romPath) throws IOException, FileNotFoundException {
+	public static byte[] getSprFromRomName(String romPath) throws IOException, FileNotFoundException {
 		byte[] ROM = readFile(romPath);
-		byte[] ret = sprFromRom(ROM);
+		byte[] ret = getSprFromRom(ROM);
 
 		return ret;
 	}
@@ -386,7 +386,7 @@ public abstract class SpriteManipulator {
 	 * @throws IOException
 	 * @throws FileNotFoundException
 	 */
-	public static byte[] sprFromRom(byte[] ROM) throws IOException {
+	public static byte[] getSprFromRom(byte[] ROM) throws IOException {
 		byte[] ret = new byte[SPRITE_SIZE+PAL_DATA_SIZE];
 
 		for (int i = 0; i < SPRITE_SIZE; i++) {
@@ -472,7 +472,7 @@ public abstract class SpriteManipulator {
 	 * @param pal - <b>int[]</b> contained the palette colors as RRRGGGBBB
 	 * @return <b>byte[]<b> containing palette data in 5:5:5 format
 	 */
-	public static byte[] palDataFromArray(int[] pal) {
+	public static byte[] getPalDataFromArray(int[] pal) {
 		// create palette data as 5:5:5
 		ByteBuffer palRet = ByteBuffer.allocate(0x78);
 
@@ -522,7 +522,7 @@ public abstract class SpriteManipulator {
 			r = roundVal(r);
 			g = roundVal(g);
 			b = roundVal(b);
-			ret[i] = RGB9(r,g,b);
+			ret[i] = toRGB9(r,g,b);
 		}
 		return ret;
 	}
@@ -553,7 +553,7 @@ public abstract class SpriteManipulator {
 	 * @param g
 	 * @param b
 	 */
-	public static int RGB9(int r, int g, int b) {
+	public static int toRGB9(int r, int g, int b) {
 		r = roundVal(r);
 		g = roundVal(g);
 		b = roundVal(b);
