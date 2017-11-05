@@ -335,19 +335,27 @@ public abstract class SpriteManipulator {
 			rom_patch[SPRITE_OFFSET + i] = spr[i];
 		}
 
-		// patch custom gloves colors first
-		rom_patch[0xDEDF5] = spr[0x7036];
-		rom_patch[0xDEDF6] = spr[0x7037];
-		rom_patch[0xDEDF7] = spr[0x7054];
-		rom_patch[0xDEDF8] = spr[0x7055];
+		// Check to see if blue and red mails have different hand colors from green mail
+		// if they do, assume they are custom glove colors and overwrite glove change
+		// if they don't, skip this step so we don't overwrite vanilla glove change
+		if (spr[0x7036] == spr[0x7018] && spr[0x7037] == spr[0x7019] &&
+			spr[0x7054] == spr[0x7018] && spr[0x7055] == spr[0x7019]) {
+			// Do nothing
+		} else {
+			// patch custom gloves colors first
+			rom_patch[0xDEDF5] = spr[0x7036];
+			rom_patch[0xDEDF6] = spr[0x7037];
+			rom_patch[0xDEDF7] = spr[0x7054];
+			rom_patch[0xDEDF8] = spr[0x7055];
 
-		// reset red and blue mail gloves to green mail's color
-		// TODO : check
-		spr[0x7036] = spr[0x701C];
-		spr[0x7037] = spr[0x701D];
-		spr[0x7054] = spr[0x701C];
-		spr[0x7055] = spr[0x701D];
+			// reset red and blue mail gloves to green mail's color
+			spr[0x7036] = spr[0x7018];
+			spr[0x7037] = spr[0x7019];
+			spr[0x7054] = spr[0x7018];
+			spr[0x7055] = spr[0x7019];
+		}
 
+		// add palette data to ROM
 		for (int i = 0; i < PAL_DATA_SIZE; i++) {
 			rom_patch[PAL_OFFSET + i] = spr[i+SPRITE_SIZE];
 		}
