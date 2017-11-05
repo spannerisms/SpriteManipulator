@@ -334,9 +334,24 @@ public abstract class SpriteManipulator {
 		for(int i = 0; i < SPRITE_SIZE; i++) {
 			rom_patch[SPRITE_OFFSET + i] = spr[i];
 		}
+
+		// patch custom gloves colors first
+		rom_patch[0xDEDF5] = spr[0x7036];
+		rom_patch[0xDEDF6] = spr[0x7037];
+		rom_patch[0xDEDF7] = spr[0x7054];
+		rom_patch[0xDEDF8] = spr[0x7055];
+
+		// reset red and blue mail gloves to green mail's color
+		// TODO : check
+		spr[0x7036] = spr[0x701C];
+		spr[0x7037] = spr[0x701D];
+		spr[0x7054] = spr[0x701C];
+		spr[0x7055] = spr[0x701D];
+
 		for (int i = 0; i < PAL_DATA_SIZE; i++) {
 			rom_patch[PAL_OFFSET + i] = spr[i+SPRITE_SIZE];
 		}
+
 		fsOut.write(rom_patch, 0, rom_patch.length);
 
 		fsOut.close();
