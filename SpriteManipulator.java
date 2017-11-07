@@ -655,4 +655,14 @@ public abstract class SpriteManipulator {
 		}
 		return ret;
 	}
+
+	/**
+	 * Reads palette properly from last area of sprite file
+	 * @param curSprite
+	 * @return
+	 */
+	public static byte[] getPaletteFromSPR(byte[] curSprite) {
+		// TODO : this
+		return null;
+	}
 }
