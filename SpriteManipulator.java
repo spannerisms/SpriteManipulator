@@ -68,9 +68,9 @@ public abstract class SpriteManipulator {
 		for (int i = 0; i < dis; i++) {
 			// get each color and get rid of sign
 			// colors are stored as {A,B,G,R,A,B,G,R...}
-			int b = unsignByte(pixels[i*4+1]);
-			int g = unsignByte(pixels[i*4+2]);
-			int r = unsignByte(pixels[i*4+3]);
+			int b = Byte.toUnsignedInt(pixels[i*4+1]);
+			int g = Byte.toUnsignedInt(pixels[i*4+2]);
+			int r = Byte.toUnsignedInt(pixels[i*4+3]);
 
 			// convert to 9 digits
 			int rgb = (1000000 * r) + (1000 * g) + b;
@@ -202,9 +202,9 @@ public abstract class SpriteManipulator {
 			} else {
 				short color = 0;
 				int pos = SPRITE_SIZE + (byteLoc++ * 2) - 2;
-				color = (short) unsignByte(sprite[pos+1]);
+				color = (short) Byte.toUnsignedInt(sprite[pos+1]);
 				color <<= 8;
-				color |= (short) unsignByte(sprite[pos]);
+				color |= (short) Byte.toUnsignedInt(sprite[pos]);
 
 				ret[i][0] = (byte) (((color >> 0) & 0x1F) << 3);
 				ret[i][1] = (byte) (((color >> 5) & 0x1F) << 3);
@@ -311,11 +311,6 @@ public abstract class SpriteManipulator {
 		for (int i = 0; i < 16; i++) {
 				ret[i] = pal[i+offset];
 		}
-		return ret;
-	}
-
-	public static int unsignByte(byte b) {
-		int ret = (b + 256) % 256;
 		return ret;
 	}
 
@@ -534,7 +529,7 @@ public abstract class SpriteManipulator {
 	public static byte[] roundRaster(byte[] raster) {
 		byte[] ret = new byte[raster.length];
 		for (int i = 0; i < raster.length; i++) {
-			int v = unsignByte(raster[i]);
+			int v = Byte.toUnsignedInt(raster[i]);
 			v = roundVal(v);
 			ret[i] = (byte) v;
 		}
