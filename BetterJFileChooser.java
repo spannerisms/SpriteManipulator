@@ -11,13 +11,13 @@ import javax.swing.filechooser.FileFilter;
  */
 public class BetterJFileChooser extends JFileChooser {
 	private static final long serialVersionUID = -7581065406880416887L;
-	private boolean patchingROM;
+
 	public void approveSelection() {
 		File f = getSelectedFile();
-		if(f.exists() && getDialogType() == SAVE_DIALOG){
+		if(f.exists() && getDialogType() == SAVE_DIALOG) {
 			String warning;
 			String warningHeader;
-			if (patchingROM) {
+			if (SpriteManipulator.testFileType(f.getName(), "sfc")) {
 				warning =
 						"Are you sure you want to patch \"" + f.getName() + "\"?\n"+
 						"This cannot be undone.";
@@ -31,7 +31,7 @@ public class BetterJFileChooser extends JFileChooser {
 					warning,
 					warningHeader,
 					JOptionPane.YES_NO_CANCEL_OPTION);
-			switch(result){
+			switch (result) {
 				case JOptionPane.YES_OPTION :
 					super.approveSelection();
 					return;
@@ -44,9 +44,6 @@ public class BetterJFileChooser extends JFileChooser {
 			}
 		}
 		super.approveSelection();
-	}
-		public void setROMStatus(boolean b) {
-		patchingROM = b;
 	}
 
 	public void removeAllFilters() {
