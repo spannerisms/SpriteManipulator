@@ -11,8 +11,12 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 public abstract class SpriteManipulator {
+	// SPR file format specifications
+	public static final byte[] FLAG = { 'Z', 'S', 'P', 'R' };
+	public static final byte ZSPR_VERSION = 0x1;
+
 	// class constants
-	public static final int SPRITE_SIZE = 896 * 32;
+	public static final int SPRITE_SIZE = 896 * 32; // 28672
 	public static final int PAL_DATA_SIZE = 0x78;
 	public static final int SPRITE_OFFSET = 0x80000;
 	public static final int PAL_OFFSET = 0x0DD308;
@@ -651,13 +655,49 @@ public abstract class SpriteManipulator {
 		return ret;
 	}
 
+	// TODO : ALL THESE
 	/**
 	 * Reads palette properly from last area of sprite file
 	 * @param curSprite
 	 * @return
 	 */
 	public static byte[] getPaletteFromSPR(byte[] curSprite) {
-		// TODO : this
+		
+		return null;
+	}
+
+	/**
+	 * 
+	 */
+	public static byte[] writeCheckSum(byte[] spr) {
+		return null;
+	}
+
+	/**
+	 * Should always return true if it works.
+	 * @param spr
+	 * @return
+	 * @throws BadChecksumException
+	 */
+	public static boolean runCheckSum(byte[] spr) throws BadChecksumException {
+		// check sum whatever
+//		if (badSum) {
+//			throw new BadChecksumException();
+//		}
+		return true;
+	}
+
+	/**
+	 * 
+	 */
+	public static byte[] findSpriteData(byte[] spr) {
+		return null;
+	}
+	
+	/**
+	 * 
+	 */
+	public static byte[] findPaletteData(byte[] spr) {
 		return null;
 	}
 }
