@@ -56,7 +56,7 @@ public abstract class SpriteManipulator {
 	 * 
 	 * @param pixels - aray of color indices
 	 * @param pal - palette colors
-	 * @return <b>byte[][][]</b> representing the image as a grid of color indices
+	 * @return {@code byte[][][]} representing the image as a grid of color indices
 	 */
 	public static byte[] index(byte[] pixels, int[] pal) {
 		int dis = INDEXED_RASTER_SIZE;
@@ -96,7 +96,7 @@ public abstract class SpriteManipulator {
 	 * 
 	 * @param pixels - aray of color indices
 	 * @param pal - palette colors
-	 * @return <b>byte[][][]</b> representing the image as a grid of color indices
+	 * @return {@code byte[][][]} representing the image as a grid of color indices
 	 */
 	public static byte[][][] get8x8(byte[] pixels) {
 		int dis = INDEXED_RASTER_SIZE;
@@ -468,8 +468,8 @@ public abstract class SpriteManipulator {
 	}
 
 	/**
-	 * Create binary palette data for appending to the end of the <tt>.spr</tt> file.
-	 * @param pal - <b>int[]</b> contained the palette colors as RRRGGGBBB
+	 * Create binary palette data for appending to the end of the {@code .spr} file.
+	 * @param pal - {@code int[]} contained the palette colors as RRRGGGBBB
 	 * @return <b>byte[]<b> containing palette data in 5:5:5 format
 	 */
 	public static byte[] getPalDataFromArray(int[] pal) {
@@ -492,7 +492,7 @@ public abstract class SpriteManipulator {
 	}
 
 	/**
-	 * Writes the image to an <tt>.spr</tt> file.
+	 * Writes the image to an {@code .spr} file.
 	 * @param map - SNES 4BPP file, including 5:5:5
 	 * @param loc - File path of exported sprite
 	 */
@@ -563,7 +563,7 @@ public abstract class SpriteManipulator {
 	/**
 	 * Converts to ABGR colorspace
 	 * @param img - image to convert
-	 * @return New <tt>BufferredImage</tt> in the correct colorspace
+	 * @return New {@code BufferredImage} in the correct colorspace
 	 */
 
 	public static BufferedImage convertToABGR(BufferedImage img) {
@@ -607,7 +607,7 @@ public abstract class SpriteManipulator {
 	 * 
 	 * @param s - file name or extension
 	 * @param type - extension
-	 * @return <tt>true</tt> if extension is matched
+	 * @return {@code true} if extension is matched
 	 */
 	public static boolean testFileType(String s, String type) {
 		String filesType = getFileType(s);
@@ -619,7 +619,7 @@ public abstract class SpriteManipulator {
 	 * 
 	 * @param s - file name or extension
 	 * @param type - extensions
-	 * @return <tt>true</tt> if extension is matched
+	 * @return {@code true} if extension is matched
 	 */
 	public static boolean testFileType(String s, String[] type) {
 		String filesType = getFileType(s);
