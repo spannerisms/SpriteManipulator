@@ -124,7 +124,7 @@ public class SPRFile {
 
 	// no sprite name or author name
 	public SPRFile(byte[] spriteData, byte[] palData, byte[] glovesData) {
-		this(glovesData, glovesData, glovesData, null, "");
+		this(glovesData, glovesData, glovesData, "", "");
 	}
 
 	public void setSpriteData(byte[] spriteData) {
@@ -172,7 +172,7 @@ public class SPRFile {
 		int dl = path.lastIndexOf('.');
 		int sl = path.lastIndexOf('/');
 		String sprName;
-		
+
 		if (sl == -1) { // if not full path, use just up until extension
 			sprName = path.substring(0, dl);
 		} else { // if longer path, find what's between '/' and '.'
@@ -289,16 +289,17 @@ public class SPRFile {
 		byte[] cksm = writeChecksum(dataStream);
 
 		// add checksum to file
-		for (int i = 0; i < CKSM_OFFSET_INDICES.length; i++) {
+		for (int i = 0; i < CHECKSUM_SIZE; i++) {
 			dataStream[CKSM_OFFSET_INDICES[i]] = cksm[i];
 		}
 	}
-	
+
 	/**
 	 * 
 	 */
 	private static byte[] writeChecksum(byte[] spr) {
-		return null;
+		byte[] ret = new byte[CHECKSUM_SIZE];
+		return ret;
 	}
 
 	public boolean runSelfChecksum() throws BadChecksumException {
@@ -404,12 +405,12 @@ public class SPRFile {
 		for (int i = 0; i < PAL_DATA_SIZE; i++, loc++) {
 			palData[i] = zSPR[loc];
 		}
-		
+
 		ret.setPalData(palData);
 
 		return ret;
 	}
-	
+
 	/**
 	 * Turns valid formats into an array of bytes.
 	 * With regads to the name and author parameters,

@@ -54,12 +54,10 @@ public abstract class SpriteManipulator {
 	 */
 	private static int[] getIndices(int i) {
 		int[] ret = new int[BYTE_ALLOTMENTS[i]];
-
 		int p = calcOffset(i);
 		for (int j = 0; j < BYTE_ALLOTMENTS[i]; j++, p++) {
 			ret[j] = p;
 		}
-
 		return ret;
 	}
 	
