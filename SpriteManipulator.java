@@ -336,7 +336,8 @@ public abstract class SpriteManipulator {
 		return ret;
 	}
 
-	public static void patchRom(byte[] spr, String romTarget) throws IOException, FileNotFoundException {
+	public static void patchRom(byte[] sprData, byte[] palData, byte[] glovesData,
+			String romTarget) throws IOException, FileNotFoundException {
 		// Acquire ROM data
 		byte[] rom_patch;
 		FileInputStream fsInput = new FileInputStream(romTarget);
@@ -349,32 +350,30 @@ public abstract class SpriteManipulator {
 		FileOutputStream fsOut = new FileOutputStream(romTarget);
 
 		for(int i = 0; i < SPRITE_DATA_SIZE; i++) {
-			rom_patch[SPRITE_OFFSET + i] = spr[i];
+			rom_patch[SPRITE_OFFSET + i] = sprData[i];
 		}
 
-		// Check to see if blue and red mails have different hand colors from green mail
-		// if they do, assume they are custom glove colors and overwrite glove change
-		// if they don't, skip this step so we don't overwrite vanilla glove change
-		if (spr[0x7036] == spr[0x7018] && spr[0x7037] == spr[0x7019] &&
-			spr[0x7054] == spr[0x7018] && spr[0x7055] == spr[0x7019]) {
-			// Do nothing
+		// Check to see if glove colors are defined
+		boolean noneSet = true;
+		for (byte b : glovesData) {
+			if (b != 0) {
+				noneSet = false;
+				break;
+			}
+		}
+		// if not defined, skip this step
+		// otherwise write to the correct indices
+		if (noneSet) {
+			// do nothing
 		} else {
-			// patch custom gloves colors first
-			rom_patch[0xDEDF5] = spr[0x7036];
-			rom_patch[0xDEDF6] = spr[0x7037];
-			rom_patch[0xDEDF7] = spr[0x7054];
-			rom_patch[0xDEDF8] = spr[0x7055];
-
-			// reset red and blue mail gloves to green mail's color
-			spr[0x7036] = spr[0x7018];
-			spr[0x7037] = spr[0x7019];
-			spr[0x7054] = spr[0x7018];
-			spr[0x7055] = spr[0x7019];
+			for (int i = 0; i < 4; i++) {
+				rom_patch[GLOVE_OFFSETS[i]] = glovesData[i];
+			}
 		}
 
 		// add palette data to ROM
 		for (int i = 0; i < PAL_DATA_SIZE; i++) {
-			rom_patch[PAL_OFFSET + i] = spr[i+SPRITE_DATA_SIZE];
+			rom_patch[PAL_OFFSET + i] = palData[i];
 		}
 
 		fsOut.write(rom_patch, 0, rom_patch.length);
@@ -475,7 +474,7 @@ public abstract class SpriteManipulator {
 
 	/**
 	 * Create binary palette data for appending to the end of the {@code .spr} file.
-	 * @param pal - {@code int[]} contained the palette colors as RRRGGGBBB
+	 * @param pal - 64/66 length{@code int[]} contained the palette colors as RRRGGGBBB
 	 * @return <b>byte[]<b> containing palette data in 5:5:5 format
 	 */
 	public static byte[] getPalDataFromArray(int[] pal) {
@@ -491,6 +490,32 @@ public abstract class SpriteManipulator {
 				// put color into every mail palette
 				palRet.putShort(30*t+((i-1)*2),Short.reverseBytes(s));
 			}
+		}
+
+		// end palette
+		return palRet.array();
+	}
+
+	/**
+	 * Finds binary gloves data from the last 2 indices of the palette.
+	 * If the palette has no gloves data (it is only 64 colors), return null data.
+	 */
+	public static byte[] getGlovesDataFromArray(int[] pal) {
+		int l = pal.length;
+		assert l == 64 || l == 66;
+		if (l != 66) {
+			return new byte[] { 0, 0, 0, 0};
+		}
+
+		ByteBuffer palRet = ByteBuffer.allocate(4);
+		int palI = 64;
+		for (int i = 0; i < 2; i++, palI++) {
+				int r = pal[palI] / 1000000;
+				int g = (pal[palI] % 1000000) / 1000;
+				int b = pal[palI] % 1000;
+				short s = (short) ((( b / 8) << 10) | ((( g / 8) << 5) | ((( r / 8) << 0))));
+				// put color
+				palRet.putShort(i*2,Short.reverseBytes(s));
 		}
 
 		// end palette
