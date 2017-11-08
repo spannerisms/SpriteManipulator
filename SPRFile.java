@@ -100,6 +100,7 @@ public class SPRFile {
 	private byte[] glovesData;
 	private String spriteName;
 	private String authorName;
+	private String authorNameROM;
 	private byte[] dataStream;
 
 	// default constructor
@@ -115,6 +116,8 @@ public class SPRFile {
 		this.glovesData = glovesData;
 		this.spriteName = spriteName;
 		this.authorName = authorName;
+		this.authorNameROM = authorName;
+		autoFixAuthorNameROM();
 	}
 
 	// no sprite name or author name
@@ -160,6 +163,35 @@ public class SPRFile {
 
 	public String getAuthorName() {
 		return this.authorName;
+	}
+	
+	public void setAuthorNameROM(String authorNameROM) {
+		this.authorNameROM = authorNameROM;
+	}
+
+	public String getAuthorNameROM() {
+		return this.authorNameROM;
+	}
+
+	/**
+	 * Fixes {@code authorNameROM} to only contain ASCII characters.
+	 */
+	public void autoFixAuthorNameROM() {
+		String autoName = "";
+		char[] authorSplit = authorNameROM.toCharArray();
+		for (int i = 0; i < authorSplit.length; i++) {
+			char cur = authorSplit[i];
+			short test = (short) cur;
+			// skip characters outside of byte's range
+			if (test > 255) {
+				continue;
+			}
+			// add any characters within ascii range
+			autoName += cur;
+		}
+
+		// set fixed name
+		authorNameROM = autoName;
 	}
 
 	public void setNameFromPath(String path) {
@@ -243,6 +275,12 @@ public class SPRFile {
 		// add author name
 		for (byte b : auth) { // variable length; null terminated
 			ret.add(b);
+		}
+
+		// treat authorNameROM differently as it's ASCII, not UTF-16LE
+		char[] authROM = (authorNameROM + '\0').toCharArray(); // add null terminator here
+		for (char c : authROM) {
+			ret.add((byte) c);
 		}
 
 		// size is now index of sprite data
@@ -374,6 +412,7 @@ public class SPRFile {
 
 		// find the author's name
 		String authorName = "";
+
 		// continue from this loc for author name
 		nullFound = false;
 		do {
@@ -392,6 +431,23 @@ public class SPRFile {
 		} while (!nullFound);
 
 		ret.setAuthorName(authorName);
+
+		// find the author's name ASCII
+		String authorNameROM = "";
+
+		// continue from this loc for author name
+		nullFound = false;
+		do {
+			byte b = zSPR[loc++]; // we want to include the null terminator in the count
+			if (b == 0) { // if bytes is 0, it's null byte
+				nullFound = true;
+				continue;
+			}
+			char temp = (char) b; 
+			authorNameROM += temp;
+		} while (!nullFound);
+
+		ret.setAuthorNameROM(authorNameROM);
 
 		// find sprite offset
 		loc = 0;
@@ -466,7 +522,7 @@ public class SPRFile {
 						(byte) ((temp >> 24) & 0xFF),
 						(byte) ((temp >> 16) & 0xFF),
 						(byte) ((temp >> 8) & 0xFF),
-						(byte) (temp& 0xFF)
+						(byte) (temp & 0xFF)
 					};
 		} else if (o instanceof Short) { // short to 2 byte
 			short temp = (short) o;
