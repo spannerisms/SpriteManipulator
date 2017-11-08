@@ -439,7 +439,7 @@ public class SPRFile {
 		nullFound = false;
 		do {
 			byte b = zSPR[loc++]; // we want to include the null terminator in the count
-			if (b == 0) { // if bytes is 0, it's null byte
+			if (b == 0) { // if byte is 0, it's null byte
 				nullFound = true;
 				continue;
 			}
