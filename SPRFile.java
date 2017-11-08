@@ -115,7 +115,6 @@ public class SPRFile {
 		this.glovesData = glovesData;
 		this.spriteName = spriteName;
 		this.authorName = authorName;
-		refreshDataStream();
 	}
 
 	// no sprite name or author name
@@ -248,12 +247,13 @@ public class SPRFile {
 
 		// size is now index of sprite data
 		int sprDataOffset = ret.size();
+
 		byte[] sprDataOffsets = toByteArray(sprDataOffset);
 		for (int i = 0; i < SPRITE_OFFSET_INDICES.length; i++) {
 			ret.set(SPRITE_OFFSET_INDICES[i], sprDataOffsets[i]);
 		}
 
-		// add sprite data {
+		// add sprite data
 		for (byte b : spriteData) { // Size defined in SPRITE_DATA_SIZE
 			ret.add(b);
 		}
@@ -376,28 +376,38 @@ public class SPRFile {
 		// find the author's name
 		String authorName = "";
 		// continue from this loc for author name
+		nullFound = false;
 		do {
-			byte t = zSPR[loc++]; // we want to include the null terminator in the count
-			if (t == 0) {
-				break; // but not in the name
+			byte t1 = zSPR[loc++]; // we want to include the null terminator in the count
+			byte t2 = zSPR[loc++];
+			short s = 0;
+			s |= t2; // little endian, so t2 first for java char casting
+			s <<= 8;
+			s |= t1;
+			if (s == 0) { // if both bytes are 0, it's null byte
+				nullFound = true;
+				continue;
 			}
-			char temp = (char) t; 
+			char temp = (char) s; 
 			authorName += temp;
-		} while (zSPR[loc] != 0);
+		} while (!nullFound);
 
 		ret.setAuthorName(authorName);
 
 		// find sprite offset
 		loc = 0;
 		for (int i : SPRITE_OFFSET_INDICES) {
-			loc |= zSPR[i];
+			
 			loc <<= 8;
+			loc |= zSPR[i];
+			// TODO : WHY IS THIS SPRITE SIZE AND NOT SPRITE OFFSET?
+			System.out.println(i + " : " + loc);
 		}
-
 		// write sprite data
 		byte[] sprData = new byte[SPRITE_DATA_SIZE];
 		for (int i = 0; i < SPRITE_DATA_SIZE; i++, loc++) {
-			sprData[i] = zSPR[loc];
+			sprData[i] =
+					zSPR[loc];
 		}
 
 		ret.setSpriteData(sprData);
@@ -405,8 +415,8 @@ public class SPRFile {
 		// find palete offset
 		loc = 0;
 		for (int i : PAL_OFFSET_INDICES) {
-			loc |= zSPR[i];
 			loc <<= 8;
+			loc |= zSPR[i];
 		}
 
 		// write pal data
