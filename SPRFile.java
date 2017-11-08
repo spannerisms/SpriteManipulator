@@ -488,8 +488,8 @@ public class SPRFile {
 		byte[] ret = new byte[l * 2];
 		for (int i = 0; i < l; i++) {
 			short c = (short) ca[i];
-			byte bp = (byte) (c & 0xFF);
-			byte lp = (byte) ((c >> 8) & 0xFF);
+			byte bp = (byte) ((c >> 8) & 0xFF);
+			byte lp = (byte) (c & 0xFF);
 			ret[i*2] = lp; // little endian
 			ret[i*2+1] = bp;
 		}
