@@ -220,6 +220,15 @@ public abstract class SpriteManipulator {
 		return ret;
 	}
 
+	public static byte[][] getSubpal(byte[][] pal, int palIndex) {
+		byte[][] ret = new byte[16][3];
+		int offset = palIndex * 16;
+		for (int i = 0; i < 16; i++) {
+				ret[i] = pal[i+offset];
+		}
+		return ret;
+	}
+
 	/**
 	 * Turn index map in 8x8 format into an array of ABGR values
 	 */
@@ -310,15 +319,6 @@ public abstract class SpriteManipulator {
 		return ret;
 	}
 
-	public static byte[][] getSubpal(byte[][] pal, int palIndex) {
-		byte[][] ret = new byte[16][3];
-		int offset = palIndex * 16;
-		for (int i = 0; i < 16; i++) {
-				ret[i] = pal[i+offset];
-		}
-		return ret;
-	}
-
 	public static void patchRom(byte[] spr, String romTarget) throws IOException, FileNotFoundException {
 		// Acquire ROM data
 		byte[] rom_patch;
@@ -403,11 +403,9 @@ public abstract class SpriteManipulator {
 	/**
 	 * Converts an index map into a proper 4BPP (SNES) byte map.
 	 * @param eightbyeight - color index map
-	 * @param pal - palette
-	 * @param rando - palette indices to randomize
 	 * @return new byte array in SNES4BPP format
 	 */
-	public static byte[] exportToSPR(byte[][][] eightbyeight, byte[] palData) {
+	public static byte[] exportToSPR(byte[][][] eightbyeight) {
 
 		// format of SNES 4bpp {row (r), bit plane (b)}
 		// bit plane 0 indexed such that 1011 corresponds to 0123
@@ -438,7 +436,7 @@ public abstract class SpriteManipulator {
 
 		// byte map
 		// includes the size of the sheet (896*32) + palette data (0x78)
-		byte[] bytemap = new byte[896*32+0x78];
+		byte[] bytemap = new byte[896*32];
 
 		int k = 0;
 		for (int i = 0; i < fourbpp.length; i++) {
@@ -455,15 +453,6 @@ public abstract class SpriteManipulator {
 		}
 		// end 4BPP
 
-		// add palette data, starting at end of sheet
-		int i = 896*32;
-		for (byte b : palData) {
-			if (i == bytemap.length) {
-				break;
-			}
-			bytemap[i] = b;
-			i++;
-		}
 		return bytemap;
 	}
 
@@ -489,23 +478,6 @@ public abstract class SpriteManipulator {
 
 		// end palette
 		return palRet.array();
-	}
-
-	/**
-	 * Writes the image to an {@code .spr} file.
-	 * @param map - SNES 4BPP file, including 5:5:5
-	 * @param loc - File path of exported sprite
-	 */
-	public static void writeSPR(byte[] map, String loc) throws IOException {
-		// create a file at directory
-		new File(loc);
-
-		FileOutputStream fileOuputStream = new FileOutputStream(loc);
-		try {
-			fileOuputStream.write(map);
-		} finally {
-			fileOuputStream.close();
-		}
 	}
 
 	/**
@@ -583,6 +555,12 @@ public abstract class SpriteManipulator {
 		return pixels;
 	}
 
+	/**
+	 * Reads a file
+	 * @param path
+	 * @return
+	 * @throws IOException
+	 */
 	public static byte[] readFile(String path) throws IOException {
 		File file = new File(path);
 		byte[] ret = new byte[(int) file.length()];
@@ -600,6 +578,23 @@ public abstract class SpriteManipulator {
 		}
 
 		return ret;
+	}
+
+	/**
+	 * Writes the image to an {@code .spr} file.
+	 * @param map - SNES 4BPP file, including 5:5:5
+	 * @param loc - File path of exported sprite
+	 */
+	public static void writeFile(byte[] map, String loc) throws IOException {
+		// create a file at directory
+		new File(loc);
+
+		FileOutputStream fileOuputStream = new FileOutputStream(loc);
+		try {
+			fileOuputStream.write(map);
+		} finally {
+			fileOuputStream.close();
+		}
 	}
 
 	/**
@@ -644,7 +639,7 @@ public abstract class SpriteManipulator {
 	}
 
 	/**
-	 * 
+	 * Turns an array from {@code int} to {@code byte}.
 	 */
 	public static byte[][] convertArray(int[][] c) {
 		byte[][] ret = new byte[c.length][c[0].length];
