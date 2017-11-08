@@ -124,7 +124,7 @@ public class SPRFile {
 
 	// no sprite name or author name
 	public SPRFile(byte[] spriteData, byte[] palData, byte[] glovesData) {
-		this(spriteData, glovesData, glovesData, "", "");
+		this(spriteData, palData, glovesData, "", "");
 	}
 
 	public void setSpriteData(byte[] spriteData) {
