@@ -16,6 +16,9 @@ public abstract class SpriteManipulator {
 	// Time stamp: 7 Nov 2017
 	public static final byte[] FLAG = { 'Z', 'S', 'P', 'R' };
 	public static final byte[] ZSPR_VERSION = { 1 }; // only 1 byte, but array for future proofing
+	public static final String SZPR_VERSION_TAG = "v1.0";
+	public static final String ZSPR_SPEC =
+			String.format("ZSPR (.SPR) version %s specification", SZPR_VERSION_TAG);
 	public static final int[] CKSM_OFFSET_INDICES = // where to find the checksum in file
 			new int[] { 0x05, 0x06 };
 	public static final int[] SPRITE_OFFSET_INDICES = // where to find the sprite offset in file
@@ -623,6 +626,61 @@ public abstract class SpriteManipulator {
 	}
 
 	/**
+	 * Attempts to read a sprite and return only the sprite data and palette data, one after the other
+	 */
+	public static byte[] parseSprite(String path) throws
+			ObsoleteSPRFormatException, BadChecksumException, IOException {
+		byte[] ret = readFile(path);
+		return parseSprite(ret);
+	}
+
+	/**
+	 * Attempts to read a sprite and return only the sprite data and palette data, one after the other
+	 */
+	public static byte[] parseSprite(byte[] zSPR) throws
+			ObsoleteSPRFormatException, BadChecksumException {
+		// check SPR file header
+		for (int i = 0; i < 4; i++) {
+			if (zSPR[i] != FLAG[i]) {
+				throw new ObsoleteSPRFormatException(
+						"Obsolete file - convert to " + ZSPR_SPEC);
+			}
+		}
+
+		// run a check sum
+		runChecksum(zSPR);
+
+		// find sprite offset
+		int sprOffset = 0;
+		for (int i : SPRITE_OFFSET_INDICES) {
+			sprOffset |= zSPR[i];
+			sprOffset <<= 8;
+		}
+
+		// find palete offset
+		int palOffset = 0;
+		for (int i : PAL_OFFSET_INDICES) {
+			palOffset |= zSPR[i];
+			palOffset <<= 8;
+		}
+
+		// make new array for sprite and pal data
+		// skips gloves (for now)
+		byte[] ret = new byte[SPRITE_DATA_SIZE + PAL_DATA_SIZE];
+		int offset = sprOffset;
+		for (int i = 0; i < SPRITE_DATA_SIZE; i++, offset++) {
+			ret[i] = zSPR[offset];
+		}
+
+		offset = palOffset;
+		for (int i = 0; i < PAL_DATA_SIZE; i++, offset++) {
+			ret[i+SPRITE_DATA_SIZE] = zSPR[offset];
+		}
+
+		return parseSprite(ret);
+	}
+
+	/**
 	 * Writes the image to an {@code .spr} file.
 	 * @param map - SNES 4BPP file, including 5:5:5
 	 * @param loc - File path of exported sprite
@@ -775,7 +833,7 @@ public abstract class SpriteManipulator {
 	 * @return
 	 */
 	public static byte[] getPaletteFromSPR(byte[] curSprite) {
-		
+
 		return null;
 	}
 
@@ -806,7 +864,7 @@ public abstract class SpriteManipulator {
 	public static byte[] findSpriteData(byte[] spr) {
 		return null;
 	}
-	
+
 	/**
 	 * 
 	 */
@@ -928,12 +986,58 @@ public abstract class SpriteManipulator {
 	public static byte[] makeSPRFile(byte[] sprData, byte[] palData, byte[] glovesDatas) {
 		return makeSPRFile(sprData, palData, glovesDatas, "", "");
 	}
-	
+
 	/**
 	 * {@code makeSPRFile} without an author
 	 */
 	public static byte[] makeSPRFile(byte[] sprData, byte[] palData, byte[] glovesDatas,
 			String sprName) {
 		return makeSPRFile(sprData, palData, glovesDatas, sprName, "");
+	}
+
+	/**
+	 * Write a sprite file to a file name
+	 * @throws IOException 
+	 */
+	public static void writeSPRFile(String loc, byte[] sprData, byte[] palData, byte[] glovesDatas,
+			String sprName, String author) throws IOException, NotSPRException {
+		writeSPRFile(loc, sprData, palData, glovesDatas, sprName, author);
+	}
+
+	/**
+	 * Write a sprite file to a file name
+	 * @throws IOException 
+	 */
+	public static void writeSPRFile(String loc, byte[] sprData, byte[] palData, byte[] glovesDatas,
+			String sprName) throws IOException, NotSPRException {
+		writeSPRFile(loc, sprData, palData, glovesDatas, sprName, "");
+	}
+
+	/**
+	 * Write a sprite file to a file name without sprite name
+	 * @throws IOException 
+	 */
+	public static void writeSPRFile(String loc, byte[] sprData, byte[] palData, byte[] glovesDatas
+			) throws IOException, NotSPRException {
+		int dl = loc.lastIndexOf('.');
+
+		// test file type
+		if (dl == -1) { // no extension
+			throw new NotSPRException();
+		} else if (!testFileType(loc, "spr")) { // not .spr
+			throw new NotSPRException();
+		}
+
+		// find file name from path
+		int sl = loc.lastIndexOf('/');
+		String sprName;
+		if (sl == -1) { // if not full path, use just up until extension
+			sprName = loc.substring(0, dl);
+		} else { // if longer path, find what's between '/' and '.'
+			sprName = loc.substring(sl + 1, dl);
+		}
+
+		byte[] file = makeSPRFile(sprData, palData, glovesDatas, sprName, "");
+		writeFile(file, loc);
 	}
 }
