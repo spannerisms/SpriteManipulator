@@ -236,8 +236,8 @@ public class SPRFile {
 		}
 
 		// convert to byte arrays
-		byte[] sName = toByteArray(spriteName + "\0"); // add null terminators here
-		byte[] auth = toByteArray(authorName + "\0");
+		byte[] sName = toByteArray(spriteName + '\0'); // add null terminators here
+		byte[] auth = toByteArray(authorName + '\0');
 
 		// add sprite name
 		for (byte b : sName) { // variable length; null terminated
@@ -293,6 +293,7 @@ public class SPRFile {
 			dataStream[CKSM_OFFSET_INDICES[i]] = cksm[i];
 		}
 	}
+
 	/**
 	 * 
 	 */
@@ -301,6 +302,11 @@ public class SPRFile {
 		return ret;
 	}
 
+	/**
+	 * Checks its own priviledge
+	 * @return
+	 * @throws BadChecksumException
+	 */
 	public boolean runSelfChecksum() throws BadChecksumException {
 		refreshDataStream();
 		return runChecksum(dataStream);
@@ -440,11 +446,11 @@ public class SPRFile {
 	 *   </tr>
 	 *   <tr>
 	 *     <td style="padding-right: 6px;">{@code Character[]} <i>or</i> {@code char}</td>
-	 *     <td>Lenght of {@code o}</td>
+	 *     <td>Length of {@code o} * 2</td>
 	 *   </tr>
 	 *   <tr>
 	 *     <td>{@code String}</td>
-	 *     <td>Lenght of {@code o}</td>
+	 *     <td>Length of {@code o} * 2</td>
 	 *   </tr>
 	 * </table>
 	 * All other types will return an empty array for safety reasons.
