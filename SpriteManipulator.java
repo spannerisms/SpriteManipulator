@@ -337,8 +337,7 @@ public abstract class SpriteManipulator {
 		return ret;
 	}
 
-	public static void patchRom(byte[] sprData, byte[] palData, byte[] glovesData,
-			String romTarget) throws IOException, FileNotFoundException {
+	public static void patchRom(String romTarget, SPRFile spr) throws IOException, FileNotFoundException {
 		// Acquire ROM data
 		byte[] rom_patch;
 		FileInputStream fsInput = new FileInputStream(romTarget);
@@ -349,6 +348,11 @@ public abstract class SpriteManipulator {
 
 		// filestream save .spr file to ROM
 		FileOutputStream fsOut = new FileOutputStream(romTarget);
+
+		// grab relevant data
+		byte[] sprData = spr.getSpriteData();
+		byte[] palData = spr.getPalData();
+		byte[] glovesData = spr.getGlovesData();
 
 		for(int i = 0; i < SPRITE_DATA_SIZE; i++) {
 			rom_patch[SPRITE_OFFSET + i] = sprData[i];
@@ -378,7 +382,6 @@ public abstract class SpriteManipulator {
 		}
 
 		fsOut.write(rom_patch, 0, rom_patch.length);
-
 		fsOut.close();
 	}
 
