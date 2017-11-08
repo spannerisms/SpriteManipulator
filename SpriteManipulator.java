@@ -225,7 +225,7 @@ public abstract class SpriteManipulator {
 				ret[0][2] = 0;
 			} else {
 				short color = 0;
-				int pos = SPRITE_DATA_SIZE + (byteLoc++ * 2) - 2;
+				int pos = (byteLoc++ * 2) - 2;
 				color = (short) Byte.toUnsignedInt(sprite[pos+1]);
 				color <<= 8;
 				color |= (short) Byte.toUnsignedInt(sprite[pos]);
