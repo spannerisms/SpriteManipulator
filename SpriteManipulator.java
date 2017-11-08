@@ -12,8 +12,9 @@ import java.nio.ByteBuffer;
 
 public abstract class SpriteManipulator {
 	// SPR file format specifications
+	// Time stamp: 7 Nov 2017
 	public static final byte[] FLAG = { 'Z', 'S', 'P', 'R' };
-	public static final byte ZSPR_VERSION = 0x1;
+	public static final byte ZSPR_VERSION = 1;
 
 	// class constants
 	public static final int SPRITE_SIZE = 896 * 32; // 28672
@@ -679,7 +680,7 @@ public abstract class SpriteManipulator {
 	 * @return
 	 * @throws BadChecksumException
 	 */
-	public static boolean runCheckSum(byte[] spr) throws BadChecksumException {
+	public static boolean runChecksum(byte[] spr) throws BadChecksumException {
 		// check sum whatever
 //		if (badSum) {
 //			throw new BadChecksumException();
