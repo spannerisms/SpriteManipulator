@@ -78,17 +78,13 @@ public class SPRFile {
 	private static final int FLAG_SIZE = BYTE_ALLOTMENTS[0];
 	@SuppressWarnings("unused")
 	private static final int VERSION_SIZE = BYTE_ALLOTMENTS[1];
-	@SuppressWarnings("unused")
 	private static final int CHECKSUM_SIZE = BYTE_ALLOTMENTS[2];
-	@SuppressWarnings("unused")
 	private static final int SPRITE_OFFSET_SIZE = BYTE_ALLOTMENTS[3];
 	@SuppressWarnings("unused")
 	private static final int SPRITE_DATA_INFO_SIZE = BYTE_ALLOTMENTS[4];
-	@SuppressWarnings("unused")
 	private static final int PAL_OFFSET_SIZE = BYTE_ALLOTMENTS[5];
 	@SuppressWarnings("unused")
 	private static final int PAL_DATA_INFO_SIZE = BYTE_ALLOTMENTS[6];
-	@SuppressWarnings("unused")
 	private static final int RESERVED_SIZE = BYTE_ALLOTMENTS[7];
 
 	// class constants
