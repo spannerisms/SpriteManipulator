@@ -179,9 +179,10 @@ public class SPRFile {
 	}
 
 	/**
-	 * gets data stream
+	 * Gets data stream after forcing any changes
 	 */
 	public byte[] getDataStream() {
+		refreshDataStream();
 		return dataStream;
 	}
 
