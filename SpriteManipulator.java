@@ -25,13 +25,12 @@ public abstract class SpriteManipulator {
 			new int[] { 0x07, 0x08, 0x09, 0x0A };
 	public static final int[] PAL_OFFSET_INDICES = // where to find the palette offset in file
 			new int[] { 0x0D, 0x0E, 0x0F, 0x10 };
-
+	public static final int SPRITE_NAME_OFFSET =
+			4 + 1 + 2 + 4 + 2 + 4 + 2 + 8; // byte counts of each part preceding
 	// class constants
 	// data sizes for sprites
 	public static final int SPRITE_DATA_SIZE = 896 * 32; // 28672
-	private static final short SPRITE_SIZE_SHORT = (short) SPRITE_DATA_SIZE; // cast to not get extra bytes
 	public static final int PAL_DATA_SIZE = 0x78;
-	private static final short PAL_SIZE_SHORT = (short) SPRITE_DATA_SIZE; // cast to not get extra bytes
 
 	// data sizes for images
 	public static final int RASTER_SIZE = 128 * 448 * 4;
@@ -626,61 +625,6 @@ public abstract class SpriteManipulator {
 	}
 
 	/**
-	 * Attempts to read a sprite and return only the sprite data and palette data, one after the other
-	 */
-	public static byte[] parseSprite(String path) throws
-			ObsoleteSPRFormatException, BadChecksumException, IOException {
-		byte[] ret = readFile(path);
-		return parseSprite(ret);
-	}
-
-	/**
-	 * Attempts to read a sprite and return only the sprite data and palette data, one after the other
-	 */
-	public static byte[] parseSprite(byte[] zSPR) throws
-			ObsoleteSPRFormatException, BadChecksumException {
-		// check SPR file header
-		for (int i = 0; i < 4; i++) {
-			if (zSPR[i] != FLAG[i]) {
-				throw new ObsoleteSPRFormatException(
-						"Obsolete file - convert to " + ZSPR_SPEC);
-			}
-		}
-
-		// run a check sum
-		runChecksum(zSPR);
-
-		// find sprite offset
-		int sprOffset = 0;
-		for (int i : SPRITE_OFFSET_INDICES) {
-			sprOffset |= zSPR[i];
-			sprOffset <<= 8;
-		}
-
-		// find palete offset
-		int palOffset = 0;
-		for (int i : PAL_OFFSET_INDICES) {
-			palOffset |= zSPR[i];
-			palOffset <<= 8;
-		}
-
-		// make new array for sprite and pal data
-		// skips gloves (for now)
-		byte[] ret = new byte[SPRITE_DATA_SIZE + PAL_DATA_SIZE];
-		int offset = sprOffset;
-		for (int i = 0; i < SPRITE_DATA_SIZE; i++, offset++) {
-			ret[i] = zSPR[offset];
-		}
-
-		offset = palOffset;
-		for (int i = 0; i < PAL_DATA_SIZE; i++, offset++) {
-			ret[i+SPRITE_DATA_SIZE] = zSPR[offset];
-		}
-
-		return parseSprite(ret);
-	}
-
-	/**
 	 * Writes the image to an {@code .spr} file.
 	 * @param map - SNES 4BPP file, including 5:5:5
 	 * @param loc - File path of exported sprite
@@ -783,7 +727,7 @@ public abstract class SpriteManipulator {
 	 * </table>
 	 * All other types will return an empty array for safety reasons.
 	 */
-	private static byte[] toByteArray(Object o) {
+	static byte[] toByteArray(Object o) {
 		byte[] ret;
 		if (o instanceof Integer) { // integer to 4 byte
 			ret = new byte[] {
@@ -840,27 +784,6 @@ public abstract class SpriteManipulator {
 	/**
 	 * 
 	 */
-	public static byte[] writeChecksum(byte[] spr) {
-		return null;
-	}
-
-	/**
-	 * Should always return true if it works.
-	 * @param spr
-	 * @return
-	 * @throws BadChecksumException
-	 */
-	public static boolean runChecksum(byte[] spr) throws BadChecksumException {
-		// check sum whatever
-//		if (badSum) {
-//			throw new BadChecksumException();
-//		}
-		return true;
-	}
-
-	/**
-	 * 
-	 */
 	public static byte[] findSpriteData(byte[] spr) {
 		return null;
 	}
@@ -872,153 +795,7 @@ public abstract class SpriteManipulator {
 		return null;
 	}
 
-	/**
-	 * 
-	 */
-	public static byte[] makeSPRFile(byte[] sprData, byte[] palData, byte[] glovesData,
-			String sprName, String author) {
-		ArrayList<Byte> ret = new ArrayList<Byte>();
-
-		// add header
-		for (byte b : FLAG) { // 4 bytes
-			ret.add(b);
-		}
-
-		// add version
-		for (byte b : ZSPR_VERSION) { // 1 byte
-			ret.add(b);
-		}
-
-		// add checksum - null data for now
-		for (byte b : new byte[2]) { // 2 bytes
-			ret.add(b);
-		}
-
-		// add sprite data offset, start with 0s
-		for (byte b : new byte[4]) { // 4 bytes
-			ret.add(b);
-		}
-
-		// add sprite size (constant)
-		for (byte b : toByteArray(SPRITE_SIZE_SHORT)) { // 2 bytes
-			ret.add(b);
-		}
-
-		// add palette data offset, start with 0s
-		for (byte b : new byte[4]) { // 4 bytes
-			ret.add(b);
-		}
-
-		// add palette size (constant)
-		for (byte b : toByteArray(PAL_SIZE_SHORT)) { // 2 bytes
-			ret.add(b);
-		}
-
-		// add reserved (constant size)
-		for (byte b : new byte[8]) { // 8 bytes
-			ret.add(b);
-		}
-
-		// convert to byte arrays
-		byte[] sName = toByteArray(sprName + "\0"); // add null terminators here
-		byte[] auth = toByteArray(author + "\0");
-
-		// add sprite name
-		for (byte b : sName) { // variable length; null terminated
-			ret.add(b);
-		}
-
-		// add author name
-		for (byte b : auth) { // variable length; null terminated
-			ret.add(b);
-		}
-
-		// size is now index of sprite data
-		int sprDataOffset = ret.size();
-		byte[] sprDataOffsets = toByteArray(sprDataOffset);
-		for (int i = 0; i < SPRITE_OFFSET_INDICES.length; i++) {
-			ret.set(SPRITE_OFFSET_INDICES[i], sprDataOffsets[i]);
-		}
-
-		// add sprite data {
-		for (byte b : sprData) { // Size defined in SPRITE_DATA_SIZE
-			ret.add(b);
-		}
-
-		// size is now index of pal data
-		int palDataOffset = ret.size();
-		byte[] palDataOffsets = toByteArray(palDataOffset);
-		for (int i = 0; i < PAL_OFFSET_INDICES.length; i++) {
-			ret.set(PAL_OFFSET_INDICES[i], palDataOffsets[i]);
-		}
-
-		// add palette data
-		for (byte b : palData) { // Size defined in PAL_DATA_SIZE
-			ret.add(b);
-		}
-
-		// add gloves data
-		for (byte b : glovesData) { // 4 bytes
-			ret.add(b);
-		}
-
-		// convert to a byte array
-		int s = ret.size();
-		byte[] ret2 = new byte[s];
-		for (int i = 0; i < s; i++) {
-			ret2[i] = (Byte) ret.get(i);
-		}
-
-		// calculate checksum
-		byte[] cksm = writeChecksum(ret2);
-
-		// add checksum to file
-		for (int i = 0; i < CKSM_OFFSET_INDICES.length; i++) {
-			ret.set(CKSM_OFFSET_INDICES[i], cksm[i]);
-		}
-
-		return ret2;
-	}
-
-	/**
-	 * {@code makeSPRFile} without an author or sprite name
-	 */
-	public static byte[] makeSPRFile(byte[] sprData, byte[] palData, byte[] glovesDatas) {
-		return makeSPRFile(sprData, palData, glovesDatas, "", "");
-	}
-
-	/**
-	 * {@code makeSPRFile} without an author
-	 */
-	public static byte[] makeSPRFile(byte[] sprData, byte[] palData, byte[] glovesDatas,
-			String sprName) {
-		return makeSPRFile(sprData, palData, glovesDatas, sprName, "");
-	}
-
-	/**
-	 * Write a sprite file to a file name
-	 * @throws IOException 
-	 */
-	public static void writeSPRFile(String loc, byte[] sprData, byte[] palData, byte[] glovesDatas,
-			String sprName, String author) throws IOException, NotSPRException {
-		writeSPRFile(loc, sprData, palData, glovesDatas, sprName, author);
-	}
-
-	/**
-	 * Write a sprite file to a file name
-	 * @throws IOException 
-	 */
-	public static void writeSPRFile(String loc, byte[] sprData, byte[] palData, byte[] glovesDatas,
-			String sprName) throws IOException, NotSPRException {
-		writeSPRFile(loc, sprData, palData, glovesDatas, sprName, "");
-	}
-
-	/**
-	 * Write a sprite file to a file name without sprite name
-	 * @throws IOException 
-	 */
-	public static void writeSPRFile(String loc, byte[] sprData, byte[] palData, byte[] glovesDatas
-			) throws IOException, NotSPRException {
+	public static void writeSPRFile(String loc, SPRFile s) throws IOException, NotSPRException {
 		int dl = loc.lastIndexOf('.');
 
 		// test file type
@@ -1031,13 +808,15 @@ public abstract class SpriteManipulator {
 		// find file name from path
 		int sl = loc.lastIndexOf('/');
 		String sprName;
+		
 		if (sl == -1) { // if not full path, use just up until extension
 			sprName = loc.substring(0, dl);
 		} else { // if longer path, find what's between '/' and '.'
 			sprName = loc.substring(sl + 1, dl);
 		}
 
-		byte[] file = makeSPRFile(sprData, palData, glovesDatas, sprName, "");
+		s.setSpriteName(sprName);
+		byte[] file = s.getDataStream();
 		writeFile(file, loc);
 	}
 }
