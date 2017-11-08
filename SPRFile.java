@@ -421,7 +421,7 @@ public class SPRFile {
 	 * <table>
 	 *   <caption>Accepted types</caption>
 	 *   <tr>
-	 *     <th >Type</th>
+	 *     <th>Type</th>
 	 *     <th>Bytes</th>
 	 *   </tr>
 	 *   <tr>
