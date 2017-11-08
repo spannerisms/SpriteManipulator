@@ -17,7 +17,7 @@ public class SPRFile {
 	public static final int[] CKSM_OFFSET_INDICES = SpriteManipulator.CKSM_OFFSET_INDICES;
 	public static final int[] SPRITE_OFFSET_INDICES = SpriteManipulator.SPRITE_OFFSET_INDICES;
 	public static final int[] PAL_OFFSET_INDICES = SpriteManipulator.PAL_OFFSET_INDICES;
-	public static final int SPRITE_NAME_OFFSET =  SpriteManipulator.SPRITE_NAME_OFFSET;
+	public static final int SPRITE_NAME_OFFSET = SpriteManipulator.SPRITE_NAME_OFFSET;
 
 	/**
 	 * <table>
@@ -246,11 +246,15 @@ public class SPRFile {
 		}
 
 		// size is now index of sprite data
-		int sprDataOffset = ret.size();
-
+		int sprDataOffset = ret.size() + 0;
+		System.out.println("Current index : " + sprDataOffset);
 		byte[] sprDataOffsets = toByteArray(sprDataOffset);
+		for (int i = 0; i < sprDataOffsets.length; i++) {
+			System.out.println(" Byte : " + i + " : " + sprDataOffsets[i]);
+		}
 		for (int i = 0; i < SPRITE_OFFSET_INDICES.length; i++) {
-			ret.set(SPRITE_OFFSET_INDICES[i], sprDataOffsets[i]);
+			System.out.print("Index : " + SPRITE_OFFSET_INDICES[i] + " | Removed : " + ret.set(SPRITE_OFFSET_INDICES[i], sprDataOffsets[i]));
+			System.out.println(" | Added: " + sprDataOffsets[i]);
 		}
 
 		// add sprite data
@@ -397,11 +401,8 @@ public class SPRFile {
 		// find sprite offset
 		loc = 0;
 		for (int i : SPRITE_OFFSET_INDICES) {
-			
 			loc <<= 8;
 			loc |= zSPR[i];
-			// TODO : WHY IS THIS SPRITE SIZE AND NOT SPRITE OFFSET?
-			System.out.println(i + " : " + loc);
 		}
 		// write sprite data
 		byte[] sprData = new byte[SPRITE_DATA_SIZE];
@@ -452,7 +453,7 @@ public class SPRFile {
 	 *     <td>2</td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td style="padding-right: 6px;">{@code Character[]} <i>or</i> {@code char}</td>
+	 *     <td style="padding-right: 6px;">{@code Character[]} <i>or</i> {@code char[]}</td>
 	 *     <td>Length of {@code o} * 2</td>
 	 *   </tr>
 	 *   <tr>
