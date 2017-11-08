@@ -31,7 +31,7 @@ public abstract class SpriteManipulator {
 			String.format("ZSPR (.SPR) version %s specification", SZPR_VERSION_TAG);
 	public static final int[] CKSM_OFFSET_INDICES = getIndices(2); // where to find the checksum in file
 	public static final int[] SPRITE_OFFSET_INDICES = getIndices(3); // where to find the sprite offset in file
-	public static final int[] PAL_OFFSET_INDICES = getIndices(52); // where to find the palette offset in file
+	public static final int[] PAL_OFFSET_INDICES = getIndices(5); // where to find the palette offset in file
 	public static final int SPRITE_NAME_OFFSET = calcOffset(8);
 
 	/**
