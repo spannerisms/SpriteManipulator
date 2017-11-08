@@ -360,7 +360,7 @@ public class SPRFile {
 			s |= t2; // little endian, so t2 first for java char casting
 			s <<= 8;
 			s |= t1;
-			if (s == 0) { // if both bytes is 0, it's null byte
+			if (s == 0) { // if both bytes are 0, it's null byte
 				nullFound = true;
 				continue;
 			}
