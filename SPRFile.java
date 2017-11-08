@@ -19,6 +19,78 @@ public class SPRFile {
 	public static final int[] PAL_OFFSET_INDICES = SpriteManipulator.PAL_OFFSET_INDICES;
 	public static final int SPRITE_NAME_OFFSET =  SpriteManipulator.SPRITE_NAME_OFFSET;
 
+	/**
+	 * <table>
+	 *   <tr>
+	 *     <th>Index</th>
+	 *     <th>Block</th>
+	 *     <th>Bytes</th>
+	 *   </th>
+	 *  <tr>
+	 *    <td>0</td>
+	 *    <td>flag</td>
+	 *    <td>4</td>
+	 *  </tr>
+	 *  <tr>
+	 *    <td>1</td>
+	 *    <td>version</td>
+	 *    <td>1</td>
+	 *  </tr>
+	 *  <tr>
+	 *    <td>2</td>
+	 *    <td>checksum</td>
+	 *    <td>4</td>
+	 *  </tr>
+	 *  <tr>
+	 *    <td>3</td>
+	 *    <td>sprite data offset</td>
+	 *    <td>4</td>
+	 *  </tr>
+	 *  <tr>
+	 *    <td>4</td>
+	 *    <td>sprite data size</td>
+	 *    <td>2</td>
+	 *  </tr>
+	 *  <tr>
+	 *    <td>5</td>
+	 *    <td>pal data offset</td>
+	 *    <td>4</td>
+	 *  </tr>
+	 *  <tr>
+	 *    <td>6</td>
+	 *    <td>pal data size</td>
+	 *    <td>2</td>
+	 *  </tr>
+	 *  <tr>
+	 *    <td>7</td>
+	 *    <td>reserved</td>
+	 *    <td>8</td>
+	 *  </tr>
+	 *  <tr>
+	 *    <td>8</td>
+	 *    <td>sprite name</td>
+	 *    <td>...</td>
+	 *  </tr>
+	 * </table>
+	 */
+	public static final int[] BYTE_ALLOTMENTS =  SpriteManipulator.BYTE_ALLOTMENTS;
+	@SuppressWarnings("unused")
+	private static final int FLAG_SIZE = BYTE_ALLOTMENTS[0];
+	@SuppressWarnings("unused")
+	private static final int VERSION_SIZE = BYTE_ALLOTMENTS[1];
+	@SuppressWarnings("unused")
+	private static final int CHECKSUM_SIZE = BYTE_ALLOTMENTS[2];
+	@SuppressWarnings("unused")
+	private static final int SPRITE_OFFSET_SIZE = BYTE_ALLOTMENTS[3];
+	@SuppressWarnings("unused")
+	private static final int SPRITE_DATA_INFO_SIZE = BYTE_ALLOTMENTS[4];
+	@SuppressWarnings("unused")
+	private static final int PAL_OFFSET_SIZE = BYTE_ALLOTMENTS[5];
+	@SuppressWarnings("unused")
+	private static final int PAL_DATA_INFO_SIZE = BYTE_ALLOTMENTS[6];
+	@SuppressWarnings("unused")
+	private static final int RESERVED_SIZE = BYTE_ALLOTMENTS[7];
+
 	// class constants
 	// data sizes for sprites
 	public static final int SPRITE_DATA_SIZE = SpriteManipulator.SPRITE_DATA_SIZE;
@@ -124,42 +196,42 @@ public class SPRFile {
 		ArrayList<Byte> ret = new ArrayList<Byte>();
 
 		// add header
-		for (byte b : FLAG) { // 4 bytes
+		for (byte b : FLAG) {
 			ret.add(b);
 		}
 
 		// add version
-		for (byte b : ZSPR_VERSION) { // 1 byte
+		for (byte b : ZSPR_VERSION) {
 			ret.add(b);
 		}
 
 		// add checksum - null data for now
-		for (byte b : new byte[2]) { // 2 bytes
+		for (byte b : new byte[CHECKSUM_SIZE]) {
 			ret.add(b);
 		}
 
 		// add sprite data offset, start with 0s
-		for (byte b : new byte[4]) { // 4 bytes
+		for (byte b : new byte[SPRITE_OFFSET_SIZE]) {
 			ret.add(b);
 		}
 
 		// add sprite size (constant)
-		for (byte b : toByteArray(SPRITE_SIZE_SHORT)) { // 2 bytes
+		for (byte b : toByteArray(SPRITE_SIZE_SHORT)) {
 			ret.add(b);
 		}
 
 		// add palette data offset, start with 0s
-		for (byte b : new byte[4]) { // 4 bytes
+		for (byte b : new byte[PAL_OFFSET_SIZE]) {
 			ret.add(b);
 		}
 
 		// add palette size (constant)
-		for (byte b : toByteArray(PAL_SIZE_SHORT)) { // 2 bytes
+		for (byte b : toByteArray(PAL_SIZE_SHORT)) {
 			ret.add(b);
 		}
 
 		// add reserved (constant size)
-		for (byte b : new byte[8]) { // 8 bytes
+		for (byte b : new byte[RESERVED_SIZE]) {
 			ret.add(b);
 		}
 
@@ -202,7 +274,7 @@ public class SPRFile {
 		}
 
 		// add gloves data
-		for (byte b : glovesData) { // 4 bytes
+		for (byte b : glovesData) {
 			ret.add(b);
 		}
 

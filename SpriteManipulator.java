@@ -13,19 +13,56 @@ import java.nio.ByteBuffer;
 public abstract class SpriteManipulator {
 	// SPR file format specifications
 	// Time stamp: 7 Nov 2017
+	public static final int[] BYTE_ALLOTMENTS = new int[] { // for calculating offsets
+		4, // 0: header
+		1, // 1: version
+		4, // 2: checksum
+		4, // 3: sprite data offset
+		2, // 4: sprite data size
+		4, // 5: pal data offset
+		2, // 6: pal data size
+		8, // 7: reserved
+			// 8 : sprite name
+	};
 	public static final byte[] FLAG = { 'Z', 'S', 'P', 'R' };
 	public static final byte[] ZSPR_VERSION = { 1 }; // only 1 byte, but array for future proofing
 	public static final String SZPR_VERSION_TAG = "v1.0";
 	public static final String ZSPR_SPEC =
 			String.format("ZSPR (.SPR) version %s specification", SZPR_VERSION_TAG);
-	public static final int[] CKSM_OFFSET_INDICES = // where to find the checksum in file
-			new int[] { 0x05, 0x06 };
-	public static final int[] SPRITE_OFFSET_INDICES = // where to find the sprite offset in file
-			new int[] { 0x07, 0x08, 0x09, 0x0A };
-	public static final int[] PAL_OFFSET_INDICES = // where to find the palette offset in file
-			new int[] { 0x0D, 0x0E, 0x0F, 0x10 };
-	public static final int SPRITE_NAME_OFFSET =
-			4 + 1 + 2 + 4 + 2 + 4 + 2 + 8; // byte counts of each part preceding
+	public static final int[] CKSM_OFFSET_INDICES = getIndices(2); // where to find the checksum in file
+	public static final int[] SPRITE_OFFSET_INDICES = getIndices(3); // where to find the sprite offset in file
+	public static final int[] PAL_OFFSET_INDICES = getIndices(52); // where to find the palette offset in file
+	public static final int SPRITE_NAME_OFFSET = calcOffset(8);
+
+	/**
+	 * Calculates the BEGINNING index based on the allotted bytes of all previous items;
+	 * e.g. {@code calcOffset(3)} will find the offset for the block {@code Sprite data offset}
+	 * by adding together the number of bytes allotted to the previous 2 blocks.
+	 * @param i
+	 * @return
+	 */
+	private static int calcOffset(int i) {
+		int ret = 0;
+		for (int j = 0; j < i; j++) {
+			ret += BYTE_ALLOTMENTS[j];
+		}
+		return ret;
+	}
+
+	/**
+	 * Calculates the beginning index and then the remaining alloted bytes.
+	 */
+	private static int[] getIndices(int i) {
+		int[] ret = new int[BYTE_ALLOTMENTS[i]];
+
+		int p = calcOffset(i);
+		for (int j = 0; j < BYTE_ALLOTMENTS[i]; j++, p++) {
+			ret[j] = p;
+		}
+
+		return ret;
+	}
+	
 	// class constants
 	// data sizes for sprites
 	public static final int SPRITE_DATA_SIZE = 896 * 32; // 28672
