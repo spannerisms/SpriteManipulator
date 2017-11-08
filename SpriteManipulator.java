@@ -60,7 +60,7 @@ public abstract class SpriteManipulator {
 		}
 		return ret;
 	}
-	
+
 	// class constants
 	// data sizes for sprites
 	public static final int SPRITE_DATA_SIZE = 896 * 32; // 28672
