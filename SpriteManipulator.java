@@ -525,7 +525,7 @@ public abstract class SpriteManipulator {
 
 	/**
 	 * Create binary palette data for appending to the end of the {@code .spr} file.
-	 * @param pal - 64/66 length{@code int[]} contained the palette colors as RRRGGGBBB
+	 * @param pal - 64/66 length {@code int[]} contained the palette colors as RRRGGGBBB
 	 * @return <b>byte[]<b> containing palette data in 5:5:5 format
 	 */
 	public static byte[] getPalDataFromArray(int[] pal) {
@@ -555,7 +555,7 @@ public abstract class SpriteManipulator {
 		int l = pal.length;
 		assert l == 64 || l == 66;
 		if (l != 66) {
-			return new byte[] { 0, 0, 0, 0};
+			return new byte[] { 0, 0, 0, 0 };
 		}
 
 		ByteBuffer palRet = ByteBuffer.allocate(4);
