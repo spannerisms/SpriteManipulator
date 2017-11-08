@@ -293,7 +293,6 @@ public class SPRFile {
 			dataStream[CKSM_OFFSET_INDICES[i]] = cksm[i];
 		}
 	}
-
 	/**
 	 * 
 	 */
@@ -353,14 +352,21 @@ public class SPRFile {
 		// find the sprite name
 		String spriteName = "";
 		int loc = SPRITE_NAME_OFFSET;
+		boolean nullFound = false;
 		do {
-			byte t = zSPR[loc++]; // we want to include the null terminator in the count
-			if (t == 0) {
-				break; // but not in the name
+			byte t1 = zSPR[loc++]; // we want to include the null terminator in the count
+			byte t2 = zSPR[loc++];
+			short s = 0;
+			s |= t2; // little endian, so t2 first for java char casting
+			s <<= 8;
+			s |= t1;
+			if (s == 0) { // if both bytes is 0, it's null byte
+				nullFound = true;
+				continue;
 			}
-			char temp = (char) t; 
+			char temp = (char) s; 
 			spriteName += temp;
-		} while (zSPR[loc] != 0);
+		} while (!nullFound);
 
 		ret.setSpriteName(spriteName);
 
@@ -479,9 +485,13 @@ public class SPRFile {
 	 */
 	private static byte[] charArrayToByteArray(char[] ca) {
 		int l = ca.length;
-		byte[] ret = new byte[l];
+		byte[] ret = new byte[l * 2];
 		for (int i = 0; i < l; i++) {
-			ret[i] = (byte) ca[i];
+			short c = (short) ca[i];
+			byte bp = (byte) (c & 0xFF);
+			byte lp = (byte) ((c >> 8) & 0xFF);
+			ret[i*2] = lp; // little endian
+			ret[i*2+1] = bp;
 		}
 		return ret;
 	}
