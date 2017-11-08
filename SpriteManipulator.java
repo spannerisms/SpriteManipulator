@@ -30,6 +30,7 @@ public abstract class SpriteManipulator {
 	// data sizes for sprites
 	public static final int SPRITE_DATA_SIZE = 896 * 32; // 28672
 	public static final int PAL_DATA_SIZE = 0x78;
+	public static final int GLOVE_DATA_SIZE = 4;
 
 	// data sizes for images
 	public static final int RASTER_SIZE = 128 * 448 * 4;
@@ -392,29 +393,48 @@ public abstract class SpriteManipulator {
 	 * @throws IOException
 	 * @throws FileNotFoundException
 	 */
-	public static byte[] getSprFromRomName(String romPath) throws IOException, FileNotFoundException {
+	public static byte[] getSprFromROM(String romPath) throws IOException, FileNotFoundException {
 		byte[] ROM = readFile(romPath);
-		byte[] ret = getSprFromRom(ROM);
-
-		return ret;
-	}
-
-	/**
-	 * Reads a ROM to create a SPR file data stream.
-	 * @param ROM
-	 * @return
-	 * @throws IOException
-	 * @throws FileNotFoundException
-	 */
-	public static byte[] getSprFromRom(byte[] ROM) throws IOException {
-		byte[] ret = new byte[SPRITE_DATA_SIZE+PAL_DATA_SIZE];
+		byte[] ret = new byte[SPRITE_DATA_SIZE];
 
 		for (int i = 0; i < SPRITE_DATA_SIZE; i++) {
 			ret[i] = ROM[SPRITE_OFFSET + i];
 		}
 
+		return ret;
+	}
+
+	/**
+	 * Reads a ROM to create a pal data stream.
+	 * @param romPath
+	 * @return
+	 * @throws IOException
+	 * @throws FileNotFoundException
+	 */
+	public static byte[] getPalFromROM(String romPath) throws IOException, FileNotFoundException {
+		byte[] ROM = readFile(romPath);
+		byte[] ret = new byte[PAL_DATA_SIZE];
+
 		for (int i = 0; i < PAL_DATA_SIZE; i++) {
-			ret[i+SPRITE_DATA_SIZE] = ROM[PAL_OFFSET + i];
+			ret[i] = ROM[PAL_OFFSET + i];
+		}
+
+		return ret;
+	}
+
+	/**
+	 * Reads a ROM to return glove data
+	 * @param romPath
+	 * @return
+	 * @throws IOException
+	 * @throws FileNotFoundException
+	 */
+	public static byte[] getGlovesFromROM(String romPath) throws IOException, FileNotFoundException {
+		byte[] ROM = readFile(romPath);
+		byte[] ret = new byte[GLOVE_DATA_SIZE];
+
+		for (int i = 0; i < GLOVE_DATA_SIZE; i++) {
+			ret[i] = ROM[GLOVE_OFFSETS[i]];
 		}
 
 		return ret;
