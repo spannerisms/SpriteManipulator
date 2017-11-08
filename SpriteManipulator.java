@@ -9,31 +9,47 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 
 public abstract class SpriteManipulator {
 	// SPR file format specifications
 	// Time stamp: 7 Nov 2017
 	public static final byte[] FLAG = { 'Z', 'S', 'P', 'R' };
-	public static final byte ZSPR_VERSION = 1;
+	public static final byte[] ZSPR_VERSION = { 1 }; // only 1 byte, but array for future proofing
+	public static final int[] CKSM_OFFSET_INDICES = // where to find the checksum in file
+			new int[] { 0x05, 0x06 };
+	public static final int[] SPRITE_OFFSET_INDICES = // where to find the sprite offset in file
+			new int[] { 0x07, 0x08, 0x09, 0x0A };
+	public static final int[] PAL_OFFSET_INDICES = // where to find the palette offset in file
+			new int[] { 0x0D, 0x0E, 0x0F, 0x10 };
 
 	// class constants
-	public static final int SPRITE_SIZE = 896 * 32; // 28672
+	// data sizes for sprites
+	public static final int SPRITE_DATA_SIZE = 896 * 32; // 28672
+	private static final short SPRITE_SIZE_SHORT = (short) SPRITE_DATA_SIZE; // cast to not get extra bytes
 	public static final int PAL_DATA_SIZE = 0x78;
-	public static final int SPRITE_OFFSET = 0x80000;
-	public static final int PAL_OFFSET = 0x0DD308;
+	private static final short PAL_SIZE_SHORT = (short) SPRITE_DATA_SIZE; // cast to not get extra bytes
+
+	// data sizes for images
 	public static final int RASTER_SIZE = 128 * 448 * 4;
 	public static final int INDEXED_RASTER_SIZE = 128 * 448;
 
+	// ROM offsets
+	public static final int SPRITE_OFFSET = 0x80000;
+	public static final int PAL_OFFSET = 0x0DD308;
+	public static final int[] GLOVE_OFFSETS =
+			new int[] { 0xDEDF5, 0xDEDF6, 0xDEDF7, 0xDEDF }; // gloves, gloves, mitts, mitts
+
 	// format of snes 4bpp {row (r), bit plane (b)}
 	// bit plane 0 indexed such that 1011 corresponds to 0123
-	static final int BPPI[][] = {
+	public static final int BPPI[][] = new int[][] {
 			{0,0},{0,1},{1,0},{1,1},{2,0},{2,1},{3,0},{3,1},
 			{4,0},{4,1},{5,0},{5,1},{6,0},{6,1},{7,0},{7,1},
 			{0,2},{0,3},{1,2},{1,3},{2,2},{2,3},{3,2},{3,3},
 			{4,2},{4,3},{5,2},{5,3},{6,2},{6,3},{7,2},{7,3}
 	};
 
-	static final byte[][] ZAPPALETTE = {
+	private static final byte[][] ZAPPALETTE = new byte[][] {
 			{ 0, 0, 0},
 			{ 0, 0, 0},
 			{ -48, -72, 24},
@@ -51,6 +67,7 @@ public abstract class SpriteManipulator {
 			{ 120, 48, -96},
 			{ -8, -8, -8}
 	};
+
 	/**
 	 * Indexes an image based on a palette.
 	 * Assumes ABGR color space.
@@ -163,7 +180,7 @@ public abstract class SpriteManipulator {
 		int b = -1;
 		// locate where in interlacing map we're reading from
 		int g;
-		for (int i = 0; i < SPRITE_SIZE; i++) {
+		for (int i = 0; i < SPRITE_DATA_SIZE; i++) {
 			// find interlacing index
 			g = i%32;
 			// increment at 0th index
@@ -206,7 +223,7 @@ public abstract class SpriteManipulator {
 				ret[0][2] = 0;
 			} else {
 				short color = 0;
-				int pos = SPRITE_SIZE + (byteLoc++ * 2) - 2;
+				int pos = SPRITE_DATA_SIZE + (byteLoc++ * 2) - 2;
 				color = (short) Byte.toUnsignedInt(sprite[pos+1]);
 				color <<= 8;
 				color |= (short) Byte.toUnsignedInt(sprite[pos]);
@@ -331,7 +348,7 @@ public abstract class SpriteManipulator {
 		// filestream save .spr file to ROM
 		FileOutputStream fsOut = new FileOutputStream(romTarget);
 
-		for(int i = 0; i < SPRITE_SIZE; i++) {
+		for(int i = 0; i < SPRITE_DATA_SIZE; i++) {
 			rom_patch[SPRITE_OFFSET + i] = spr[i];
 		}
 
@@ -357,7 +374,7 @@ public abstract class SpriteManipulator {
 
 		// add palette data to ROM
 		for (int i = 0; i < PAL_DATA_SIZE; i++) {
-			rom_patch[PAL_OFFSET + i] = spr[i+SPRITE_SIZE];
+			rom_patch[PAL_OFFSET + i] = spr[i+SPRITE_DATA_SIZE];
 		}
 
 		fsOut.write(rom_patch, 0, rom_patch.length);
@@ -387,14 +404,14 @@ public abstract class SpriteManipulator {
 	 * @throws FileNotFoundException
 	 */
 	public static byte[] getSprFromRom(byte[] ROM) throws IOException {
-		byte[] ret = new byte[SPRITE_SIZE+PAL_DATA_SIZE];
+		byte[] ret = new byte[SPRITE_DATA_SIZE+PAL_DATA_SIZE];
 
-		for (int i = 0; i < SPRITE_SIZE; i++) {
+		for (int i = 0; i < SPRITE_DATA_SIZE; i++) {
 			ret[i] = ROM[SPRITE_OFFSET + i];
 		}
 
 		for (int i = 0; i < PAL_DATA_SIZE; i++) {
-			ret[i+SPRITE_SIZE] = ROM[PAL_OFFSET + i];
+			ret[i+SPRITE_DATA_SIZE] = ROM[PAL_OFFSET + i];
 		}
 
 		return ret;
@@ -651,6 +668,81 @@ public abstract class SpriteManipulator {
 		return ret;
 	}
 
+	/**
+	 * Turns valid formats into an array of bytes.
+	 * With regads to the name and author parameters,
+	 * this function does not add the null terminator {@code \0}.
+	 * <br /><br />
+	 * @param o
+	 * @return {@code byte[]} array according to follows:
+	 * <table>
+	 *   <caption>Accepted types</caption>
+	 *   <tr>
+	 *     <th >Type</th>
+	 *     <th>Bytes</th>
+	 *   </tr>
+	 *   <tr>
+	 *     <td>{@code Integer} <i>or</i> {@code int}</td>
+	 *     <td>4</td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td>{@code Short} <i>or</i> {@code short}</td>
+	 *     <td>2</td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td style="padding-right: 6px;">{@code Character[]} <i>or</i> {@code char}</td>
+	 *     <td>Lenght of {@code o}</td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td>{@code String}</td>
+	 *     <td>Lenght of {@code o}</td>
+	 *   </tr>
+	 * </table>
+	 * All other types will return an empty array for safety reasons.
+	 */
+	private static byte[] toByteArray(Object o) {
+		byte[] ret;
+		if (o instanceof Integer) { // integer to 4 byte
+			ret = new byte[] {
+						(byte) ((SPRITE_SIZE_SHORT >> 24) & 0xFF),
+						(byte) ((SPRITE_SIZE_SHORT >> 16) & 0xFF),
+						(byte) ((SPRITE_SIZE_SHORT >> 8) & 0xFF),
+						(byte) (SPRITE_SIZE_SHORT & 0xFF)
+					};
+		} else if (o instanceof Short) { // short to 2 byte
+			ret = new byte[] {
+						(byte) ((SPRITE_SIZE_SHORT >> 8) & 0xFF),
+						(byte) (SPRITE_SIZE_SHORT & 0xFF)
+					};
+		} else if (o instanceof char[] || o instanceof Character[]) { // cast chars to bytes
+			ret = charArrayToByteArray((char[]) o);
+		} else if (o instanceof String) { // cast chars to bytes
+			char[] temp = ((String) o).toCharArray();
+			ret = charArrayToByteArray(temp);
+		} else { // default to empty array
+			ret = new byte[] {};
+		}
+
+		return ret;
+	}
+
+	/**
+	 * Turns a character array into an array of bytes.
+	 * This function should only be called by {@code toByteArray()},
+	 * which should act as a wrapper for all byte conversions
+	 * to prevent compatability issues if anything changes.
+	 * @param ca
+	 * @return
+	 */
+	private static byte[] charArrayToByteArray(char[] ca) {
+		int l = ca.length;
+		byte[] ret = new byte[l];
+		for (int i = 0; i < l; i++) {
+			ret[i] = (byte) ca[i];
+		}
+		return ret;
+	}
+
 	// TODO : ALL THESE
 	/**
 	 * Reads palette properly from last area of sprite file
@@ -665,7 +757,7 @@ public abstract class SpriteManipulator {
 	/**
 	 * 
 	 */
-	public static byte[] writeCheckSum(byte[] spr) {
+	public static byte[] writeChecksum(byte[] spr) {
 		return null;
 	}
 
@@ -695,5 +787,128 @@ public abstract class SpriteManipulator {
 	 */
 	public static byte[] findPaletteData(byte[] spr) {
 		return null;
+	}
+
+	/**
+	 * 
+	 */
+	public static byte[] makeSPRFile(byte[] sprData, byte[] palData, byte[] glovesData,
+			String sprName, String author) {
+		ArrayList<Byte> ret = new ArrayList<Byte>();
+
+		// add header
+		for (byte b : FLAG) { // 4 bytes
+			ret.add(b);
+		}
+
+		// add version
+		for (byte b : ZSPR_VERSION) { // 1 byte
+			ret.add(b);
+		}
+
+		// add checksum - null data for now
+		for (byte b : new byte[2]) { // 2 bytes
+			ret.add(b);
+		}
+
+		// add sprite data offset, start with 0s
+		for (byte b : new byte[4]) { // 4 bytes
+			ret.add(b);
+		}
+
+		// add sprite size (constant)
+		for (byte b : toByteArray(SPRITE_SIZE_SHORT)) { // 2 bytes
+			ret.add(b);
+		}
+
+		// add palette data offset, start with 0s
+		for (byte b : new byte[4]) { // 4 bytes
+			ret.add(b);
+		}
+
+		// add palette size (constant)
+		for (byte b : toByteArray(PAL_SIZE_SHORT)) { // 2 bytes
+			ret.add(b);
+		}
+
+		// add reserved (constant size)
+		for (byte b : new byte[8]) { // 8 bytes
+			ret.add(b);
+		}
+
+		// convert to byte arrays
+		byte[] sName = toByteArray(sprName + "\0"); // add null terminators here
+		byte[] auth = toByteArray(author + "\0");
+
+		// add sprite name
+		for (byte b : sName) { // variable length; null terminated
+			ret.add(b);
+		}
+
+		// add author name
+		for (byte b : auth) { // variable length; null terminated
+			ret.add(b);
+		}
+
+		// size is now index of sprite data
+		int sprDataOffset = ret.size();
+		byte[] sprDataOffsets = toByteArray(sprDataOffset);
+		for (int i = 0; i < SPRITE_OFFSET_INDICES.length; i++) {
+			ret.set(SPRITE_OFFSET_INDICES[i], sprDataOffsets[i]);
+		}
+
+		// add sprite data {
+		for (byte b : sprData) { // Size defined in SPRITE_DATA_SIZE
+			ret.add(b);
+		}
+
+		// size is now index of pal data
+		int palDataOffset = ret.size();
+		byte[] palDataOffsets = toByteArray(palDataOffset);
+		for (int i = 0; i < PAL_OFFSET_INDICES.length; i++) {
+			ret.set(PAL_OFFSET_INDICES[i], palDataOffsets[i]);
+		}
+
+		// add palette data
+		for (byte b : palData) { // Size defined in PAL_DATA_SIZE
+			ret.add(b);
+		}
+
+		// add gloves data
+		for (byte b : glovesData) { // 4 bytes
+			ret.add(b);
+		}
+
+		// convert to a byte array
+		int s = ret.size();
+		byte[] ret2 = new byte[s];
+		for (int i = 0; i < s; i++) {
+			ret2[i] = (Byte) ret.get(i);
+		}
+
+		// calculate checksum
+		byte[] cksm = writeChecksum(ret2);
+
+		// add checksum to file
+		for (int i = 0; i < CKSM_OFFSET_INDICES.length; i++) {
+			ret.set(CKSM_OFFSET_INDICES[i], cksm[i]);
+		}
+
+		return ret2;
+	}
+
+	/**
+	 * {@code makeSPRFile} without an author or sprite name
+	 */
+	public static byte[] makeSPRFile(byte[] sprData, byte[] palData, byte[] glovesDatas) {
+		return makeSPRFile(sprData, palData, glovesDatas, "", "");
+	}
+	
+	/**
+	 * {@code makeSPRFile} without an author
+	 */
+	public static byte[] makeSPRFile(byte[] sprData, byte[] palData, byte[] glovesDatas,
+			String sprName) {
+		return makeSPRFile(sprData, palData, glovesDatas, sprName, "");
 	}
 }
