@@ -246,15 +246,10 @@ public class SPRFile {
 		}
 
 		// size is now index of sprite data
-		int sprDataOffset = ret.size() + 0;
-		System.out.println("Current index : " + sprDataOffset);
+		int sprDataOffset = ret.size();
 		byte[] sprDataOffsets = toByteArray(sprDataOffset);
-		for (int i = 0; i < sprDataOffsets.length; i++) {
-			System.out.println(" Byte : " + i + " : " + sprDataOffsets[i]);
-		}
 		for (int i = 0; i < SPRITE_OFFSET_INDICES.length; i++) {
-			System.out.print("Index : " + SPRITE_OFFSET_INDICES[i] + " | Removed : " + ret.set(SPRITE_OFFSET_INDICES[i], sprDataOffsets[i]));
-			System.out.println(" | Added: " + sprDataOffsets[i]);
+			ret.set(SPRITE_OFFSET_INDICES[i], sprDataOffsets[i]);
 		}
 
 		// add sprite data
@@ -466,16 +461,18 @@ public class SPRFile {
 	private static byte[] toByteArray(Object o) {
 		byte[] ret;
 		if (o instanceof Integer) { // integer to 4 byte
+			int temp = (int) o;
 			ret = new byte[] {
-						(byte) ((SPRITE_SIZE_SHORT >> 24) & 0xFF),
-						(byte) ((SPRITE_SIZE_SHORT >> 16) & 0xFF),
-						(byte) ((SPRITE_SIZE_SHORT >> 8) & 0xFF),
-						(byte) (SPRITE_SIZE_SHORT & 0xFF)
+						(byte) ((temp >> 24) & 0xFF),
+						(byte) ((temp >> 16) & 0xFF),
+						(byte) ((temp >> 8) & 0xFF),
+						(byte) (temp& 0xFF)
 					};
 		} else if (o instanceof Short) { // short to 2 byte
+			short temp = (short) o;
 			ret = new byte[] {
-						(byte) ((SPRITE_SIZE_SHORT >> 8) & 0xFF),
-						(byte) (SPRITE_SIZE_SHORT & 0xFF)
+						(byte) ((temp >> 8) & 0xFF),
+						(byte) (temp & 0xFF)
 					};
 		} else if (o instanceof char[] || o instanceof Character[]) { // cast chars to bytes
 			ret = charArrayToByteArray((char[]) o);
