@@ -52,7 +52,7 @@ public class SPRFile {
 
 	// no sprite name or author name
 	public SPRFile(byte[] spriteData, byte[] palData, byte[] glovesData) {
-		this(glovesData, glovesData, glovesData, "", "");
+		this(glovesData, glovesData, glovesData, null, "");
 	}
 
 	public void setSpriteData(byte[] spriteData) {
@@ -95,6 +95,21 @@ public class SPRFile {
 		return this.authorName;
 	}
 
+	public void setNameFromPath(String path) {
+		// find file name from path
+		int dl = path.lastIndexOf('.');
+		int sl = path.lastIndexOf('/');
+		String sprName;
+		
+		if (sl == -1) { // if not full path, use just up until extension
+			sprName = path.substring(0, dl);
+		} else { // if longer path, find what's between '/' and '.'
+			sprName = path.substring(sl + 1, dl);
+		}
+
+		this.spriteName = sprName;
+	}
+
 	/**
 	 * gets data stream
 	 */
@@ -129,7 +144,7 @@ public class SPRFile {
 		}
 
 		// add sprite size (constant)
-		for (byte b : SpriteManipulator.toByteArray(SPRITE_SIZE_SHORT)) { // 2 bytes
+		for (byte b : toByteArray(SPRITE_SIZE_SHORT)) { // 2 bytes
 			ret.add(b);
 		}
 
@@ -139,7 +154,7 @@ public class SPRFile {
 		}
 
 		// add palette size (constant)
-		for (byte b : SpriteManipulator.toByteArray(PAL_SIZE_SHORT)) { // 2 bytes
+		for (byte b : toByteArray(PAL_SIZE_SHORT)) { // 2 bytes
 			ret.add(b);
 		}
 
@@ -149,8 +164,8 @@ public class SPRFile {
 		}
 
 		// convert to byte arrays
-		byte[] sName = SpriteManipulator.toByteArray(spriteName + "\0"); // add null terminators here
-		byte[] auth = SpriteManipulator.toByteArray(authorName + "\0");
+		byte[] sName = toByteArray(spriteName + "\0"); // add null terminators here
+		byte[] auth = toByteArray(authorName + "\0");
 
 		// add sprite name
 		for (byte b : sName) { // variable length; null terminated
@@ -164,7 +179,7 @@ public class SPRFile {
 
 		// size is now index of sprite data
 		int sprDataOffset = ret.size();
-		byte[] sprDataOffsets = SpriteManipulator.toByteArray(sprDataOffset);
+		byte[] sprDataOffsets = toByteArray(sprDataOffset);
 		for (int i = 0; i < SPRITE_OFFSET_INDICES.length; i++) {
 			ret.set(SPRITE_OFFSET_INDICES[i], sprDataOffsets[i]);
 		}
@@ -176,7 +191,7 @@ public class SPRFile {
 
 		// size is now index of pal data
 		int palDataOffset = ret.size();
-		byte[] palDataOffsets = SpriteManipulator.toByteArray(palDataOffset);
+		byte[] palDataOffsets = toByteArray(palDataOffset);
 		for (int i = 0; i < PAL_OFFSET_INDICES.length; i++) {
 			ret.set(PAL_OFFSET_INDICES[i], palDataOffsets[i]);
 		}
@@ -210,8 +225,13 @@ public class SPRFile {
 	/**
 	 * 
 	 */
-	public static byte[] writeChecksum(byte[] spr) {
+	private static byte[] writeChecksum(byte[] spr) {
 		return null;
+	}
+
+	public boolean runSelfChecksum() throws BadChecksumException {
+		refreshDataStream();
+		return runChecksum(dataStream);
 	}
 
 	/**
@@ -222,9 +242,10 @@ public class SPRFile {
 	 */
 	public static boolean runChecksum(byte[] spr) throws BadChecksumException {
 		// check sum whatever
-//		if (badSum) {
-//			throw new BadChecksumException();
-//		}
+		boolean badSum = 1 == 0;
+		if (badSum) {
+			throw new BadChecksumException();
+		}
 		return true;
 	}
 
@@ -237,14 +258,18 @@ public class SPRFile {
 	 * @throws BadChecksumException
 	 */
 	public static SPRFile readFile(String path) throws
-		IOException, ObsoleteSPRFormatException, BadChecksumException {
+		IOException, NotSPRException, ObsoleteSPRFormatException, BadChecksumException {
+		if (!SpriteManipulator.testFileType(path, "spr")) {
+			throw new NotSPRException();
+		}
+
 		byte[] zSPR = SpriteManipulator.readFile(path);
 
 		// check SPR file header
 		for (int i = 0; i < 4; i++) {
 			if (zSPR[i] != FLAG[i]) {
 				throw new ObsoleteSPRFormatException(
-						"Obsolete file - convert to " + ZSPR_SPEC);
+						"Obsolete file format; please convert to " + ZSPR_SPEC);
 			}
 		}
 
@@ -310,6 +335,81 @@ public class SPRFile {
 		
 		ret.setPalData(palData);
 
+		return ret;
+	}
+	
+	/**
+	 * Turns valid formats into an array of bytes.
+	 * With regads to the name and author parameters,
+	 * this function does not add the null terminator {@code \0}.
+	 * <br /><br />
+	 * @param o
+	 * @return {@code byte[]} array according to follows:
+	 * <table>
+	 *   <caption>Accepted types</caption>
+	 *   <tr>
+	 *     <th >Type</th>
+	 *     <th>Bytes</th>
+	 *   </tr>
+	 *   <tr>
+	 *     <td>{@code Integer} <i>or</i> {@code int}</td>
+	 *     <td>4</td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td>{@code Short} <i>or</i> {@code short}</td>
+	 *     <td>2</td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td style="padding-right: 6px;">{@code Character[]} <i>or</i> {@code char}</td>
+	 *     <td>Lenght of {@code o}</td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td>{@code String}</td>
+	 *     <td>Lenght of {@code o}</td>
+	 *   </tr>
+	 * </table>
+	 * All other types will return an empty array for safety reasons.
+	 */
+	private static byte[] toByteArray(Object o) {
+		byte[] ret;
+		if (o instanceof Integer) { // integer to 4 byte
+			ret = new byte[] {
+						(byte) ((SPRITE_SIZE_SHORT >> 24) & 0xFF),
+						(byte) ((SPRITE_SIZE_SHORT >> 16) & 0xFF),
+						(byte) ((SPRITE_SIZE_SHORT >> 8) & 0xFF),
+						(byte) (SPRITE_SIZE_SHORT & 0xFF)
+					};
+		} else if (o instanceof Short) { // short to 2 byte
+			ret = new byte[] {
+						(byte) ((SPRITE_SIZE_SHORT >> 8) & 0xFF),
+						(byte) (SPRITE_SIZE_SHORT & 0xFF)
+					};
+		} else if (o instanceof char[] || o instanceof Character[]) { // cast chars to bytes
+			ret = charArrayToByteArray((char[]) o);
+		} else if (o instanceof String) { // cast chars to bytes
+			char[] temp = ((String) o).toCharArray();
+			ret = charArrayToByteArray(temp);
+		} else { // default to empty array
+			ret = new byte[] {};
+		}
+
+		return ret;
+	}
+
+	/**
+	 * Turns a character array into an array of bytes.
+	 * This function should only be called by {@code toByteArray()},
+	 * which should act as a wrapper for all byte conversions
+	 * to prevent compatability issues if anything changes.
+	 * @param ca
+	 * @return
+	 */
+	private static byte[] charArrayToByteArray(char[] ca) {
+		int l = ca.length;
+		byte[] ret = new byte[l];
+		for (int i = 0; i < l; i++) {
+			ret[i] = (byte) ca[i];
+		}
 		return ret;
 	}
 }

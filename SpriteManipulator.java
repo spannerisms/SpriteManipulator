@@ -9,7 +9,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 
 public abstract class SpriteManipulator {
 	// SPR file format specifications
@@ -423,16 +422,7 @@ public abstract class SpriteManipulator {
 	 * @param eightbyeight - color index map
 	 * @return new byte array in SNES4BPP format
 	 */
-	public static byte[] exportToSPR(byte[][][] eightbyeight) {
-
-		// format of SNES 4bpp {row (r), bit plane (b)}
-		// bit plane 0 indexed such that 1011 corresponds to 0123
-		int bppi[][] = {
-				{0,0},{0,1},{1,0},{1,1},{2,0},{2,1},{3,0},{3,1},
-				{4,0},{4,1},{5,0},{5,1},{6,0},{6,1},{7,0},{7,1},
-				{0,2},{0,3},{1,2},{1,3},{2,2},{2,3},{3,2},{3,3},
-				{4,2},{4,3},{5,2},{5,3},{6,2},{6,3},{7,2},{7,3}
-		};
+	public static byte[] export8x8ToSPR(byte[][][] eightbyeight) {
 
 		// bit map
 		boolean[][][] fourbpp = new boolean[896][32][8];
@@ -442,8 +432,8 @@ public abstract class SpriteManipulator {
 			for (int j = 0; j < fourbpp[0].length; j++) {
 				for (int k = 0; k < 8; k++) {
 					// get row r's bth bit plane, based on index j of bppi
-					int row = bppi[j][0];
-					int plane = bppi[j][1];
+					int row = BPPI[j][0];
+					int plane = BPPI[j][1];
 					int byteX = eightbyeight[i][row][k];
 					// AND the bits with 1000, 0100, 0010, 0001 to get bit in that location
 					boolean bitB = ( byteX & (1 << plane) ) > 0;
@@ -453,7 +443,6 @@ public abstract class SpriteManipulator {
 		}
 
 		// byte map
-		// includes the size of the sheet (896*32) + palette data (0x78)
 		byte[] bytemap = new byte[896*32];
 
 		int k = 0;
@@ -695,107 +684,8 @@ public abstract class SpriteManipulator {
 		return ret;
 	}
 
-	/**
-	 * Turns valid formats into an array of bytes.
-	 * With regads to the name and author parameters,
-	 * this function does not add the null terminator {@code \0}.
-	 * <br /><br />
-	 * @param o
-	 * @return {@code byte[]} array according to follows:
-	 * <table>
-	 *   <caption>Accepted types</caption>
-	 *   <tr>
-	 *     <th >Type</th>
-	 *     <th>Bytes</th>
-	 *   </tr>
-	 *   <tr>
-	 *     <td>{@code Integer} <i>or</i> {@code int}</td>
-	 *     <td>4</td>
-	 *   </tr>
-	 *   <tr>
-	 *     <td>{@code Short} <i>or</i> {@code short}</td>
-	 *     <td>2</td>
-	 *   </tr>
-	 *   <tr>
-	 *     <td style="padding-right: 6px;">{@code Character[]} <i>or</i> {@code char}</td>
-	 *     <td>Lenght of {@code o}</td>
-	 *   </tr>
-	 *   <tr>
-	 *     <td>{@code String}</td>
-	 *     <td>Lenght of {@code o}</td>
-	 *   </tr>
-	 * </table>
-	 * All other types will return an empty array for safety reasons.
-	 */
-	static byte[] toByteArray(Object o) {
-		byte[] ret;
-		if (o instanceof Integer) { // integer to 4 byte
-			ret = new byte[] {
-						(byte) ((SPRITE_SIZE_SHORT >> 24) & 0xFF),
-						(byte) ((SPRITE_SIZE_SHORT >> 16) & 0xFF),
-						(byte) ((SPRITE_SIZE_SHORT >> 8) & 0xFF),
-						(byte) (SPRITE_SIZE_SHORT & 0xFF)
-					};
-		} else if (o instanceof Short) { // short to 2 byte
-			ret = new byte[] {
-						(byte) ((SPRITE_SIZE_SHORT >> 8) & 0xFF),
-						(byte) (SPRITE_SIZE_SHORT & 0xFF)
-					};
-		} else if (o instanceof char[] || o instanceof Character[]) { // cast chars to bytes
-			ret = charArrayToByteArray((char[]) o);
-		} else if (o instanceof String) { // cast chars to bytes
-			char[] temp = ((String) o).toCharArray();
-			ret = charArrayToByteArray(temp);
-		} else { // default to empty array
-			ret = new byte[] {};
-		}
-
-		return ret;
-	}
-
-	/**
-	 * Turns a character array into an array of bytes.
-	 * This function should only be called by {@code toByteArray()},
-	 * which should act as a wrapper for all byte conversions
-	 * to prevent compatability issues if anything changes.
-	 * @param ca
-	 * @return
-	 */
-	private static byte[] charArrayToByteArray(char[] ca) {
-		int l = ca.length;
-		byte[] ret = new byte[l];
-		for (int i = 0; i < l; i++) {
-			ret[i] = (byte) ca[i];
-		}
-		return ret;
-	}
-
-	// TODO : ALL THESE
-	/**
-	 * Reads palette properly from last area of sprite file
-	 * @param curSprite
-	 * @return
-	 */
-	public static byte[] getPaletteFromSPR(byte[] curSprite) {
-
-		return null;
-	}
-
-	/**
-	 * 
-	 */
-	public static byte[] findSpriteData(byte[] spr) {
-		return null;
-	}
-
-	/**
-	 * 
-	 */
-	public static byte[] findPaletteData(byte[] spr) {
-		return null;
-	}
-
-	public static void writeSPRFile(String loc, SPRFile s) throws IOException, NotSPRException {
+	public static void writeSPRFile(String loc, SPRFile s)
+			throws IOException, NotSPRException, BadChecksumException {
 		int dl = loc.lastIndexOf('.');
 
 		// test file type
@@ -805,17 +695,12 @@ public abstract class SpriteManipulator {
 			throw new NotSPRException();
 		}
 
-		// find file name from path
-		int sl = loc.lastIndexOf('/');
-		String sprName;
-		
-		if (sl == -1) { // if not full path, use just up until extension
-			sprName = loc.substring(0, dl);
-		} else { // if longer path, find what's between '/' and '.'
-			sprName = loc.substring(sl + 1, dl);
+		// test sprite name
+		if (s.getSpriteName().equals("")) {
+			s.setNameFromPath(loc);
 		}
 
-		s.setSpriteName(sprName);
+		s.runSelfChecksum();
 		byte[] file = s.getDataStream();
 		writeFile(file, loc);
 	}
