@@ -372,8 +372,19 @@ public class SPRFile {
 	 * @throws BadChecksumException
 	 */
 	public static boolean runChecksum(byte[] spr) throws BadChecksumException {
-		// check sum whatever
-		boolean badSum = 1 == 0;
+		byte[] myCksm = new byte[CHECKSUM_SIZE]; // stored checksum
+		for (int i = 0; i < CHECKSUM_SIZE; i++) {
+			myCksm[i] = spr[CKSM_OFFSET_INDICES[i]];
+		}
+
+		byte[] chestsum = calcChecksum(spr); // test checksum
+		boolean badSum = false;
+		for (int i = 0; i < CHECKSUM_SIZE; i++) {
+			if (myCksm[i] != chestsum[i]) {
+				badSum = true;
+			}
+		}
+
 		if (badSum) {
 			throw new BadChecksumException();
 		}
