@@ -376,7 +376,7 @@ public class SPRFile {
 	}
 
 	/**
-	 * Checks its own priviledge
+	 * Checks its own privilege
 	 * @return
 	 * @throws BadChecksumException
 	 */
