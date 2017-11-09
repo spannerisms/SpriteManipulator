@@ -94,6 +94,7 @@ public class SPRFile {
 	private static final int PAL_DATA_SIZE = SpriteManipulator.PAL_DATA_SIZE;
 	private static final short PAL_SIZE_SHORT = (short) SPRITE_DATA_SIZE; // cast to not get extra bytes
 	private static final int GLOVE_DATA_SIZE = SpriteManipulator.GLOVE_DATA_SIZE;
+
 	// local vars
 	private byte[] spriteData;
 	private byte[] palData;
@@ -105,7 +106,8 @@ public class SPRFile {
 
 	// default constructor
 	public SPRFile() {
-		// default empty
+		// set gloves data to default just in case
+		glovesData = new byte[GLOVE_DATA_SIZE];
 	}
 
 	// constructor
