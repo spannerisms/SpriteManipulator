@@ -93,7 +93,7 @@ public class SPRFile {
 	private static final short SPRITE_SIZE_SHORT = (short) SPRITE_DATA_SIZE; // cast to not get extra bytes
 	private static final int PAL_DATA_SIZE = SpriteManipulator.PAL_DATA_SIZE;
 	private static final short PAL_SIZE_SHORT = (short) SPRITE_DATA_SIZE; // cast to not get extra bytes
-
+	private static final int GLOVE_DATA_SIZE = SpriteManipulator.GLOVE_DATA_SIZE;
 	// local vars
 	private byte[] spriteData;
 	private byte[] palData;
@@ -515,6 +515,15 @@ public class SPRFile {
 
 		ret.setPalData(palData);
 
+		// find and write gloves data
+		byte[] glovesData = new byte[GLOVE_DATA_SIZE];
+		for (int i = 0; i < GLOVE_DATA_SIZE; i++, loc++) { // continue from end of palette
+			glovesData[i] = zSPR[loc];
+		}
+
+		ret.setGlovesData(glovesData);
+
+		// return new sprfile object
 		return ret;
 	}
 
