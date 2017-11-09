@@ -176,6 +176,12 @@ public class SPRFile {
 		return this.authorNameROM;
 	}
 
+	public String toString() {
+		String spr = (this.spriteName == null) ? "Untitled" : this.spriteName;
+		String nom = (this.authorName == null) ? "Unknown" : this.authorName;
+		return String.format("'%s' by %s", spr, nom);
+	}
+
 	/**
 	 * Fixes {@code authorNameROM} to only contain ASCII characters.
 	 */
