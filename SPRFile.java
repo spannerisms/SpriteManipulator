@@ -10,14 +10,13 @@ import java.util.ArrayList;
  */
 public class SPRFile {
 	// class constants
-	public static final byte[] FLAG = SpriteManipulator.FLAG;
-	public static final byte[] ZSPR_VERSION = SpriteManipulator.ZSPR_VERSION;
-	public static final String SZPR_VERSION_TAG = SpriteManipulator.SZPR_VERSION_TAG;
-	public static final String ZSPR_SPEC = SpriteManipulator.ZSPR_SPEC;
-	public static final int[] CKSM_OFFSET_INDICES = SpriteManipulator.CKSM_OFFSET_INDICES;
-	public static final int[] SPRITE_OFFSET_INDICES = SpriteManipulator.SPRITE_OFFSET_INDICES;
-	public static final int[] PAL_OFFSET_INDICES = SpriteManipulator.PAL_OFFSET_INDICES;
-	public static final int SPRITE_NAME_OFFSET = SpriteManipulator.SPRITE_NAME_OFFSET;
+	private static final byte[] FLAG = SpriteManipulator.FLAG;
+	private static final byte[] ZSPR_VERSION = SpriteManipulator.ZSPR_VERSION;
+	private static final String ZSPR_SPEC = SpriteManipulator.ZSPR_SPEC;
+	private static final int[] CKSM_OFFSET_INDICES = SpriteManipulator.CKSM_OFFSET_INDICES;
+	private static final int[] SPRITE_OFFSET_INDICES = SpriteManipulator.SPRITE_OFFSET_INDICES;
+	private static final int[] PAL_OFFSET_INDICES = SpriteManipulator.PAL_OFFSET_INDICES;
+	private static final int SPRITE_NAME_OFFSET = SpriteManipulator.SPRITE_NAME_OFFSET;
 
 	/**
 	 * <table>
@@ -73,7 +72,7 @@ public class SPRFile {
 	 *  </tr>
 	 * </table>
 	 */
-	public static final int[] BYTE_ALLOTMENTS =  SpriteManipulator.BYTE_ALLOTMENTS;
+	private static final int[] BYTE_ALLOTMENTS =  SpriteManipulator.BYTE_ALLOTMENTS;
 	@SuppressWarnings("unused")
 	private static final int FLAG_SIZE = BYTE_ALLOTMENTS[0];
 	@SuppressWarnings("unused")
@@ -86,12 +85,13 @@ public class SPRFile {
 	@SuppressWarnings("unused")
 	private static final int PAL_DATA_INFO_SIZE = BYTE_ALLOTMENTS[6];
 	private static final int RESERVED_SIZE = BYTE_ALLOTMENTS[7];
+	private static final int NAME_ROM_MAX_LENGTH = SpriteManipulator.NAME_ROM_MAX_LENGTH;
 
 	// class constants
 	// data sizes for sprites
-	public static final int SPRITE_DATA_SIZE = SpriteManipulator.SPRITE_DATA_SIZE;
+	private static final int SPRITE_DATA_SIZE = SpriteManipulator.SPRITE_DATA_SIZE;
 	private static final short SPRITE_SIZE_SHORT = (short) SPRITE_DATA_SIZE; // cast to not get extra bytes
-	public static final int PAL_DATA_SIZE = SpriteManipulator.PAL_DATA_SIZE;
+	private static final int PAL_DATA_SIZE = SpriteManipulator.PAL_DATA_SIZE;
 	private static final short PAL_SIZE_SHORT = (short) SPRITE_DATA_SIZE; // cast to not get extra bytes
 
 	// local vars
@@ -167,6 +167,7 @@ public class SPRFile {
 	
 	public void setAuthorNameROM(String authorNameROM) {
 		this.authorNameROM = authorNameROM;
+		autoFixAuthorNameROM();
 	}
 
 	public String getAuthorNameROM() {
@@ -179,6 +180,7 @@ public class SPRFile {
 	public void autoFixAuthorNameROM() {
 		String autoName = "";
 		char[] authorSplit = authorNameROM.toCharArray();
+		int nameLength = 0;
 		for (int i = 0; i < authorSplit.length; i++) {
 			char cur = authorSplit[i];
 			short test = (short) cur;
@@ -188,6 +190,10 @@ public class SPRFile {
 			}
 			// add any characters within ascii range
 			autoName += cur;
+			nameLength++;
+			if (nameLength == NAME_ROM_MAX_LENGTH) {
+				break;
+			}
 		}
 
 		// set fixed name

@@ -33,7 +33,7 @@ public abstract class SpriteManipulator {
 	public static final int[] SPRITE_OFFSET_INDICES = getIndices(3); // where to find the sprite offset in file
 	public static final int[] PAL_OFFSET_INDICES = getIndices(5); // where to find the palette offset in file
 	public static final int SPRITE_NAME_OFFSET = calcOffset(8);
-
+	public static final int NAME_ROM_MAX_LENGTH = 20;
 	/**
 	 * Calculates the BEGINNING index based on the allotted bytes of all previous items;
 	 * e.g. {@code calcOffset(3)} will find the offset for the block {@code Sprite data offset}
