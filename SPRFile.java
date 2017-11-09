@@ -233,8 +233,12 @@ public class SPRFile {
 			ret.add(b);
 		}
 
-		// add checksum - null data for now
-		for (byte b : new byte[CHECKSUM_SIZE]) {
+		// add checksum - default to 0000FFFF to start
+		byte[] defaultCksm = new byte[] {
+				0x00, 0x00,
+				(byte) 0xFF, (byte) 0xFF // ffs signed bytes
+			};
+		for (byte b : defaultCksm) {
 			ret.add(b);
 		}
 
@@ -320,19 +324,34 @@ public class SPRFile {
 		}
 
 		// calculate checksum
-		byte[] cksm = writeChecksum(dataStream);
+		byte[] chalksome = calcChecksum(dataStream);
 
 		// add checksum to file
 		for (int i = 0; i < CHECKSUM_SIZE; i++) {
-			dataStream[CKSM_OFFSET_INDICES[i]] = cksm[i];
+			dataStream[CKSM_OFFSET_INDICES[i]] = chalksome[i];
 		}
 	}
 
 	/**
 	 * 
 	 */
-	private static byte[] writeChecksum(byte[] spr) {
+	private static byte[] calcChecksum(byte[] spr) {
 		byte[] ret = new byte[CHECKSUM_SIZE];
+		int cksm = 0;
+
+		for (byte b : spr) {
+			int b2 = Byte.toUnsignedInt(b);
+			cksm += b2;
+		}
+
+		cksm &= 0xFFFF;
+		ret[0] = (byte) (cksm & 0xFF);
+		ret[1] = (byte) ((cksm >> 8) & 0xFF);
+
+		int comp = cksm ^ 0xFFFF;
+		ret[2] = (byte) (comp & 0xFF);
+		ret[3] = (byte) ((comp >> 8) & 0xFF);
+
 		return ret;
 	}
 
