@@ -5,8 +5,6 @@ import java.util.ArrayList;
 
 /**
  * Wrapper class for all data related to SPR files
- * @author CR = SpriteManipulator.CR;
- *
  */
 public class SPRFile {
 	// class constants
