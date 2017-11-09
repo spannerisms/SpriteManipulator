@@ -176,17 +176,15 @@ public class SPRFile {
 		return this.authorNameROM;
 	}
 
-	public String toString() {
-		String spr = (this.spriteName == null) ? "Untitled" : this.spriteName;
-		String nom = (this.authorName == null) ? "Unknown" : this.authorName;
-		return String.format("'%s' by %s", spr, nom);
-	}
-
 	/**
-	 * Fixes {@code authorNameROM} to only contain ASCII characters.
+	 * Edits {@code authorNameROM} to only contain ASCII characters.
+	 * If blank, it will be set to {@code authorName} first.
 	 */
 	public void autoFixAuthorNameROM() {
 		String autoName = "";
+		if (authorNameROM.equals("")) {
+			authorNameROM = authorName;
+		}
 		char[] authorSplit = authorNameROM.toCharArray();
 		int nameLength = 0;
 		for (int i = 0; i < authorSplit.length; i++) {
@@ -221,6 +219,12 @@ public class SPRFile {
 		}
 
 		this.spriteName = sprName;
+	}
+
+	public String toString() {
+		String spr = (this.spriteName == null) ? "Untitled" : this.spriteName;
+		String nom = (this.authorName == null) ? "Unknown" : this.authorName;
+		return String.format("'%s' by %s", spr, nom);
 	}
 
 	/**
