@@ -92,7 +92,7 @@ public class SPRFile {
 	private static final int SPRITE_DATA_SIZE = SpriteManipulator.SPRITE_DATA_SIZE;
 	private static final short SPRITE_SIZE_SHORT = (short) SPRITE_DATA_SIZE; // cast to not get extra bytes
 	private static final int PAL_DATA_SIZE = SpriteManipulator.PAL_DATA_SIZE;
-	private static final short PAL_SIZE_SHORT = (short) SPRITE_DATA_SIZE; // cast to not get extra bytes
+	private static final short PAL_SIZE_SHORT = (short) PAL_DATA_SIZE; // cast to not get extra bytes
 	private static final int GLOVE_DATA_SIZE = SpriteManipulator.GLOVE_DATA_SIZE;
 
 	// local vars
@@ -211,12 +211,12 @@ public class SPRFile {
 	public void setNameFromPath(String path) {
 		// find file name from path
 		int dl = path.lastIndexOf('.');
-		int sl = path.lastIndexOf('/');
+		int sl = path.lastIndexOf('\\');
 		String sprName;
 
 		if (sl == -1) { // if not full path, use just up until extension
 			sprName = path.substring(0, dl);
-		} else { // if longer path, find what's between '/' and '.'
+		} else { // if longer path, find what's between '\' and '.'
 			sprName = path.substring(sl + 1, dl);
 		}
 
@@ -303,6 +303,7 @@ public class SPRFile {
 
 		// size is now index of sprite data
 		int sprDataOffset = ret.size();
+
 		byte[] sprDataOffsets = toByteArray(sprDataOffset);
 		for (int i = 0; i < SPRITE_OFFSET_INDICES.length; i++) {
 			ret.set(SPRITE_OFFSET_INDICES[i], sprDataOffsets[i]);
@@ -315,6 +316,7 @@ public class SPRFile {
 
 		// size is now index of pal data
 		int palDataOffset = ret.size();
+
 		byte[] palDataOffsets = toByteArray(palDataOffset);
 		for (int i = 0; i < PAL_OFFSET_INDICES.length; i++) {
 			ret.set(PAL_OFFSET_INDICES[i], palDataOffsets[i]);
@@ -499,11 +501,12 @@ public class SPRFile {
 			loc <<= 8;
 			loc |= zSPR[i];
 		}
+		loc = Integer.reverseBytes(loc); // reverse because LE
+
 		// write sprite data
 		byte[] sprData = new byte[SPRITE_DATA_SIZE];
 		for (int i = 0; i < SPRITE_DATA_SIZE; i++, loc++) {
-			sprData[i] =
-					zSPR[loc];
+			sprData[i] = zSPR[loc];
 		}
 
 		ret.setSpriteData(sprData);
@@ -514,6 +517,7 @@ public class SPRFile {
 			loc <<= 8;
 			loc |= zSPR[i];
 		}
+		loc = Integer.reverseBytes(loc); // reverse because LE
 
 		// write pal data
 		byte[] palData = new byte[PAL_DATA_SIZE];
@@ -572,16 +576,16 @@ public class SPRFile {
 		if (o instanceof Integer) { // integer to 4 byte
 			int temp = (int) o;
 			ret = new byte[] {
-						(byte) ((temp >> 24) & 0xFF),
-						(byte) ((temp >> 16) & 0xFF),
+						(byte) (temp & 0xFF),
 						(byte) ((temp >> 8) & 0xFF),
-						(byte) (temp & 0xFF)
+						(byte) ((temp >> 16) & 0xFF),
+						(byte) ((temp >> 24) & 0xFF)
 					};
 		} else if (o instanceof Short) { // short to 2 byte
 			short temp = (short) o;
 			ret = new byte[] {
+						(byte) (temp & 0xFF),
 						(byte) ((temp >> 8) & 0xFF),
-						(byte) (temp & 0xFF)
 					};
 		} else if (o instanceof char[] || o instanceof Character[]) { // cast chars to bytes
 			ret = charArrayToByteArray((char[]) o);
