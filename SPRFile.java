@@ -274,7 +274,7 @@ public class SPRFile {
 		}
 
 		// add palette size (constant)
-		for (byte b : toByteArray(PAL_SIZE_SHORT)) {
+		for (byte b : toByteArray(PAL_SIZE_SHORT + GLOVE_DATA_SIZE)) {
 			ret.add(b);
 		}
 
