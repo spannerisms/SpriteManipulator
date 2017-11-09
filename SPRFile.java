@@ -450,7 +450,7 @@ public class SPRFile {
 			s |= t2; // little endian, so t2 first for java char casting
 			s <<= 8;
 			s |= t1;
-			if (s == 0) { // if both bytes are 0, it's null byte
+			if (s == 0) { // if both bytes are 0, it's null; terminate
 				nullFound = true;
 				continue;
 			}
@@ -472,7 +472,7 @@ public class SPRFile {
 			s |= t2; // little endian, so t2 first for java char casting
 			s <<= 8;
 			s |= t1;
-			if (s == 0) { // if both bytes are 0, it's null byte
+			if (s == 0) { // if both bytes are 0, it's null; terminate
 				nullFound = true;
 				continue;
 			}
@@ -489,7 +489,7 @@ public class SPRFile {
 		nullFound = false;
 		do {
 			byte b = zSPR[loc++]; // we want to include the null terminator in the count
-			if (b == 0) { // if byte is 0, it's null byte
+			if (b == 0) { // if null byte, terminate
 				nullFound = true;
 				continue;
 			}
@@ -545,9 +545,10 @@ public class SPRFile {
 
 	/**
 	 * Turns valid formats into an array of bytes.
-	 * With regads to the name and author parameters,
+	 * With regards to the name and author parameters,
 	 * this function does not add the null terminator {@code \0}.
 	 * <br /><br />
+	 * Little endian is expected in SPR files, so bytes will be reversed here.
 	 * @param o
 	 * @return {@code byte[]} array according to follows:
 	 * <table>
