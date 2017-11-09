@@ -76,7 +76,10 @@ public abstract class SpriteManipulator {
 	public static final int SPRITE_OFFSET = 0x80000;
 	public static final int PAL_OFFSET = 0x0DD308;
 	public static final int[] GLOVE_OFFSETS =
-			new int[] { 0xDEDF5, 0xDEDF6, 0xDEDF7, 0xDEDF }; // gloves, gloves, mitts, mitts
+			new int[] { 0xDEDF5, 0xDEDF6, 0xDEDF7, 0xDEDF8 }; // gloves, gloves, mitts, mitts
+
+	public static final byte[] VANILLA_GLOVE_COLORS =
+			new byte[] { (byte) 0xF6, (byte) 0x52, (byte) 0x76, (byte) 0x03 };
 
 	// format of snes 4bpp {row (r), bit plane (b)}
 	// bit plane 0 indexed such that 1011 corresponds to 0123

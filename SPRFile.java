@@ -92,6 +92,7 @@ public class SPRFile {
 	private static final int PAL_DATA_SIZE = SpriteManipulator.PAL_DATA_SIZE;
 	private static final short PAL_SIZE_SHORT = (short) PAL_DATA_SIZE; // cast to not get extra bytes
 	private static final int GLOVE_DATA_SIZE = SpriteManipulator.GLOVE_DATA_SIZE;
+	private static final byte[] VANILLA_GLOVE_COLORS = SpriteManipulator.VANILLA_GLOVE_COLORS;
 
 	// local vars
 	private byte[] spriteData;
@@ -327,6 +328,22 @@ public class SPRFile {
 		// add palette data
 		for (byte b : palData) { // Size defined in PAL_DATA_SIZE
 			ret.add(b);
+		}
+
+		// quietly adjust empty gloves data to vanilla
+		boolean allNull = true;
+		for (byte b : glovesData) {
+			if (b != 0) {
+				allNull = false;
+				break;
+			}
+		}
+
+		// *curses sosuke and veetorp*
+		if (allNull) {
+			for (int i = 0; i < GLOVE_DATA_SIZE; i++) {
+				glovesData[i] = VANILLA_GLOVE_COLORS[i];
+			}
 		}
 
 		// add gloves data
