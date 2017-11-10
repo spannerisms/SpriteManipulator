@@ -114,12 +114,11 @@ public abstract class SpriteManipulator {
 	 * Assumes ABGR color space.
 	 * <br><br>
 	 * If a color matches an index that belongs to one of the latter 3 mails
-	 * but does not match anything in green mail
+	 * but does not match anything in green mail,
 	 * then it is treated as the color at the corresponding index of green mail.
 	 * 
 	 * @param pixels - aray of color indices
 	 * @param pal - palette colors
-	 * @return {@code byte[][][]} representing the image as a grid of color indices
 	 */
 	public static byte[] index(byte[] pixels, int[] pal) {
 		int dis = INDEXED_RASTER_SIZE;
@@ -151,14 +150,8 @@ public abstract class SpriteManipulator {
 
 	/**
 	 * Turn the image into an array of 8x8 blocks.
-	 * Assumes ABGR color space.
-	 * <br><br>
-	 * If a color matches an index that belongs to one of the latter 3 mails
-	 * but does not match anything in green mail
-	 * then it is treated as the color at the corresponding index of green mail.
 	 * 
 	 * @param pixels - aray of color indices
-	 * @param pal - palette colors
 	 * @return {@code byte[][][]} representing the image as a grid of color indices
 	 */
 	public static byte[][][] get8x8(byte[] pixels) {
@@ -202,15 +195,15 @@ public abstract class SpriteManipulator {
 
 	/**
 	 * Indexes a sprite and turns into 8x8 in one go.
+	 * <br>
+	 * See: {@link #index(byte[], int[])}, {@link #get8x8(byte[])}
 	 */
 	public static byte[][][] indexAnd8x8(byte[] pixels, int[] palette) {
-		return get8x8(
-					index(pixels, palette)
-				);
+		return get8x8(index(pixels, palette));
 	}
 
 	/**
-	 * Takes a sprite and turns it into 896 blocks of 8x8 pixels
+	 * Takes a sprite and turns it into 896 blocks of 8x8 pixels.
 	 * @param sprite
 	 */
 	public static byte[][][] makeSpr8x8(byte[] sprite) {
@@ -254,7 +247,7 @@ public abstract class SpriteManipulator {
 	 * Only uses the first 16 colors.
 	 * Automatically makes first index black.
 	 */
-	public static byte[][] getPal(byte[] sprite) {
+	public static byte[][] getPal(byte[] pal) {
 		byte[][] ret = new byte[64][3];
 		int byteLoc = 1;
 		for (int i = 0; i < 64; i++) {
@@ -265,9 +258,9 @@ public abstract class SpriteManipulator {
 			} else {
 				short color = 0;
 				int pos = (byteLoc++ * 2) - 2;
-				color = (short) Byte.toUnsignedInt(sprite[pos+1]);
+				color = (short) Byte.toUnsignedInt(pal[pos+1]);
 				color <<= 8;
-				color |= (short) Byte.toUnsignedInt(sprite[pos]);
+				color |= (short) Byte.toUnsignedInt(pal[pos]);
 
 				ret[i][0] = (byte) (((color >> 0) & 0x1F) << 3);
 				ret[i][1] = (byte) (((color >> 5) & 0x1F) << 3);
@@ -278,6 +271,11 @@ public abstract class SpriteManipulator {
 		return ret;
 	}
 
+	/**
+	 * Get 16 mail colors from a large palette
+	 * @param pal
+	 * @return
+	 */
 	public static byte[][] getSubpal(byte[][] pal, int palIndex) {
 		byte[][] ret = new byte[16][3];
 		int offset = palIndex * 16;
@@ -288,7 +286,7 @@ public abstract class SpriteManipulator {
 	}
 
 	/**
-	 * Turn index map in 8x8 format into an array of ABGR values
+	 * Turn index map in 8x8 format into an array of ABGR values.
 	 */
 	public static byte[] makeRaster(byte[][][] ebe, byte[][] palette) {
 		byte[] ret = new byte[RASTER_SIZE];
@@ -361,6 +359,11 @@ public abstract class SpriteManipulator {
 		return image;
 	}
 
+	/**
+	 * Makes 5 separate images: green mail, blue mail, red mail, bunny, zapped.
+	 * @param eightbyeight
+	 * @param pal
+	 */
 	public static BufferedImage[] makeAllMails(byte[][][] eightbyeight, byte[][] pal) {
 		BufferedImage[] ret = new BufferedImage[5];
 		byte[][] subpal;
@@ -377,6 +380,13 @@ public abstract class SpriteManipulator {
 		return ret;
 	}
 
+	/**
+	 * Patches an {@link SPRFile} into a ROM.
+	 * @param romTarget
+	 * @param spr
+	 * @throws IOException
+	 * @throws FileNotFoundException
+	 */
 	public static void patchRom(String romTarget, SPRFile spr) throws IOException, FileNotFoundException {
 		// Acquire ROM data
 		byte[] rom_patch;
@@ -426,7 +436,7 @@ public abstract class SpriteManipulator {
 	}
 
 	/**
-	 * Reads a ROM to create a SPR file data stream.
+	 * Reads a ROM to create a sprite data stream.
 	 * @param romPath
 	 * @return
 	 * @throws IOException
@@ -462,7 +472,7 @@ public abstract class SpriteManipulator {
 	}
 
 	/**
-	 * Reads a ROM to return glove data
+	 * Reads a ROM to get gloves data
 	 * @param romPath
 	 * @return
 	 * @throws IOException
@@ -485,7 +495,6 @@ public abstract class SpriteManipulator {
 	 * @return new byte array in SNES4BPP format
 	 */
 	public static byte[] export8x8ToSPR(byte[][][] eightbyeight) {
-
 		// bit map
 		boolean[][][] fourbpp = new boolean[896][32][8];
 
