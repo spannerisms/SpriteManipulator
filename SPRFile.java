@@ -8,6 +8,7 @@ import java.util.ArrayList;
  */
 public class SPRFile {
 	// class constants
+	public static final String EXTENSION = "zspr";
 	private static final byte[] FLAG = SpriteManipulator.FLAG;
 	private static final byte[] ZSPR_VERSION = SpriteManipulator.ZSPR_VERSION;
 	private static final String ZSPR_SPEC = SpriteManipulator.ZSPR_SPEC;
@@ -102,9 +103,6 @@ public class SPRFile {
 	private String authorName;
 	private String authorNameROM;
 	private byte[] dataStream;
-
-	// extension
-	public static final String EXTENSION = "ZSPR";
 
 	// default constructor
 	public SPRFile() {
