@@ -276,7 +276,7 @@ public class ZSPRFile {
 		}
 
 		// add palette size (constant)
-		for (byte b : toByteArray(PAL_SIZE_SHORT + GLOVE_DATA_SIZE)) {
+		for (byte b : toByteArray((short) (PAL_SIZE_SHORT + GLOVE_DATA_SIZE))) {
 			ret.add(b);
 		}
 
