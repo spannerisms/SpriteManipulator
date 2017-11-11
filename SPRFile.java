@@ -103,6 +103,9 @@ public class SPRFile {
 	private String authorNameROM;
 	private byte[] dataStream;
 
+	// extension
+	public static final String EXTENSION = "ZSPR";
+
 	// default constructor
 	public SPRFile() {
 		// set gloves data to default just in case
@@ -435,9 +438,9 @@ public class SPRFile {
 	 * @throws BadChecksumException
 	 */
 	public static SPRFile readFile(String path) throws
-		IOException, NotSPRException, ObsoleteSPRFormatException, BadChecksumException {
+		IOException, NotZSPRException, ObsoleteSPRFormatException, BadChecksumException {
 		if (!SpriteManipulator.testFileType(path, "spr")) {
-			throw new NotSPRException();
+			throw new NotZSPRException();
 		}
 
 		byte[] zSPR = SpriteManipulator.readFile(path);

@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 public abstract class SpriteManipulator {
-	// SPR file format specifications
+	// ZSPR file format specifications
 	// Time stamp: 7 Nov 2017
 	public static final int[] BYTE_ALLOTMENTS = new int[] { // for calculating offsets
 		4, // 0: header
@@ -28,7 +28,7 @@ public abstract class SpriteManipulator {
 	public static final byte[] ZSPR_VERSION = { 1 }; // only 1 byte, but array for future proofing
 	public static final String SZPR_VERSION_TAG = "v1.0";
 	public static final String ZSPR_SPEC =
-			String.format("ZSPR (.SPR) version %s specification", SZPR_VERSION_TAG);
+			String.format("ZSPR (.ZSPR) version %s specification", SZPR_VERSION_TAG);
 	public static final int[] CKSM_OFFSET_INDICES = getIndices(2); // where to find the checksum in file
 	public static final int[] SPRITE_OFFSET_INDICES = getIndices(3); // where to find the sprite offset in file
 	public static final int[] PAL_OFFSET_INDICES = getIndices(5); // where to find the palette offset in file
@@ -396,7 +396,7 @@ public abstract class SpriteManipulator {
 		fsInput.getChannel().position(0);
 		fsInput.close();
 
-		// filestream save .spr file to ROM
+		// filestream save .zspr file to ROM
 		FileOutputStream fsOut = new FileOutputStream(romTarget);
 
 		// grab relevant data
@@ -535,7 +535,7 @@ public abstract class SpriteManipulator {
 	}
 
 	/**
-	 * Create binary palette data for appending to the end of the {@code .spr} file.
+	 * Create binary palette data for appending to the end of the {@code .zspr} file.
 	 * @param pal - 64/66 length {@code int[]} contained the palette colors as RRRGGGBBB
 	 * @return {@code byte[]} containing palette data in 5:5:5 format
 	 */
@@ -685,7 +685,7 @@ public abstract class SpriteManipulator {
 	}
 
 	/**
-	 * Writes the image to an {@code .spr} file.
+	 * Writes the image to an {@code .zspr} file.
 	 * @param map - SNES 4BPP file, including 5:5:5
 	 * @param loc - File path of exported sprite
 	 */
@@ -756,14 +756,14 @@ public abstract class SpriteManipulator {
 	}
 
 	public static void writeSPRFile(String loc, SPRFile s)
-			throws IOException, NotSPRException, BadChecksumException {
+			throws IOException, NotZSPRException, BadChecksumException {
 		int dl = loc.lastIndexOf('.');
 
 		// test file type
 		if (dl == -1) { // no extension
-			throw new NotSPRException();
-		} else if (!testFileType(loc, "spr")) { // not .spr
-			throw new NotSPRException();
+			throw new NotZSPRException();
+		} else if (!testFileType(loc, SPRFile.EXTENSION)) { // file is not .zspr
+			throw new NotZSPRException();
 		}
 
 		// test sprite name
