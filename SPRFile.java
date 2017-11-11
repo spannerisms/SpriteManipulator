@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 /**
- * Wrapper class for all data related to SPR files
+ * Wrapper class for all data related to ZSPR files
  */
 public class SPRFile {
 	// class constants
@@ -126,7 +126,7 @@ public class SPRFile {
 
 	// no sprite name or author name
 	public SPRFile(byte[] spriteData, byte[] palData, byte[] glovesData) {
-		this(spriteData, palData, glovesData, "", "");
+		this(spriteData, palData, glovesData, "Untitled", "Unknown");
 	}
 
 	public void setSpriteData(byte[] spriteData) {
@@ -439,13 +439,13 @@ public class SPRFile {
 	 */
 	public static SPRFile readFile(String path) throws
 		IOException, NotZSPRException, ObsoleteSPRFormatException, BadChecksumException {
-		if (!SpriteManipulator.testFileType(path, "spr")) {
+		if (!SpriteManipulator.testFileType(path, EXTENSION)) {
 			throw new NotZSPRException();
 		}
 
 		byte[] zSPR = SpriteManipulator.readFile(path);
 
-		// check SPR file header
+		// check for ZSPR file header
 		for (int i = 0; i < 4; i++) {
 			if (zSPR[i] != FLAG[i]) {
 				throw new ObsoleteSPRFormatException(
@@ -551,8 +551,12 @@ public class SPRFile {
 
 		// find and write gloves data
 		byte[] glovesData = new byte[GLOVE_DATA_SIZE];
-		for (int i = 0; i < GLOVE_DATA_SIZE; i++, loc++) { // continue from end of palette
-			glovesData[i] = zSPR[loc];
+		try { // catch errors since gloves data might not exist
+			for (int i = 0; i < GLOVE_DATA_SIZE; i++, loc++) { // continue from end of palette
+				glovesData[i] = zSPR[loc];
+			}
+		} catch (Exception e) {
+			
 		}
 
 		ret.setGlovesData(glovesData);
@@ -566,7 +570,7 @@ public class SPRFile {
 	 * With regards to the name and author parameters,
 	 * this function does not add the null terminator {@code \0}.
 	 * <br /><br />
-	 * Little endian is expected in SPR files, so bytes will be reversed here.
+	 * Little endian is expected in ZSPR files, so bytes will be reversed here.
 	 * @param o
 	 * @return {@code byte[]} array according to follows:
 	 * <table>
