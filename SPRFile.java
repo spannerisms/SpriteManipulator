@@ -556,7 +556,7 @@ public class SPRFile {
 				glovesData[i] = zSPR[loc];
 			}
 		} catch (Exception e) {
-			
+			// Do nothing
 		}
 
 		ret.setGlovesData(glovesData);
