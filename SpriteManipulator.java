@@ -387,7 +387,7 @@ public abstract class SpriteManipulator {
 	 * @throws IOException
 	 * @throws FileNotFoundException
 	 */
-	public static void patchRom(String romTarget, SPRFile spr) throws IOException, FileNotFoundException {
+	public static void patchRom(String romTarget, ZSPRFile spr) throws IOException, FileNotFoundException {
 		// Acquire ROM data
 		byte[] rom_patch;
 		FileInputStream fsInput = new FileInputStream(romTarget);
@@ -755,14 +755,14 @@ public abstract class SpriteManipulator {
 		return ret;
 	}
 
-	public static void writeSPRFile(String loc, SPRFile s)
+	public static void writeSPRFile(String loc, ZSPRFile s)
 			throws IOException, NotZSPRException, BadChecksumException {
 		int dl = loc.lastIndexOf('.');
 
 		// test file type
 		if (dl == -1) { // no extension
 			throw new NotZSPRException();
-		} else if (!testFileType(loc, SPRFile.EXTENSION)) { // file is not .zspr
+		} else if (!testFileType(loc, ZSPRFile.EXTENSION)) { // file is not .zspr
 			throw new NotZSPRException();
 		}
 

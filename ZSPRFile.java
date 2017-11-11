@@ -6,7 +6,7 @@ import java.util.ArrayList;
 /**
  * Wrapper class for all data related to ZSPR files
  */
-public class SPRFile {
+public class ZSPRFile {
 	// class constants
 	public static final String EXTENSION = "zspr";
 	private static final byte[] FLAG = SpriteManipulator.FLAG;
@@ -105,13 +105,13 @@ public class SPRFile {
 	private byte[] dataStream;
 
 	// default constructor
-	public SPRFile() {
+	public ZSPRFile() {
 		// set gloves data to default just in case
 		glovesData = new byte[GLOVE_DATA_SIZE];
 	}
 
 	// constructor
-	public SPRFile(byte[] spriteData, byte[] palData, byte[] glovesData,
+	public ZSPRFile(byte[] spriteData, byte[] palData, byte[] glovesData,
 			String spriteName, String authorName) {
 		this.spriteData = spriteData;
 		this.palData = palData;
@@ -123,7 +123,7 @@ public class SPRFile {
 	}
 
 	// no sprite name or author name
-	public SPRFile(byte[] spriteData, byte[] palData, byte[] glovesData) {
+	public ZSPRFile(byte[] spriteData, byte[] palData, byte[] glovesData) {
 		this(spriteData, palData, glovesData, "Untitled", "Unknown");
 	}
 
@@ -435,7 +435,7 @@ public class SPRFile {
 	 * @throws ObsoleteSPRFormatException
 	 * @throws BadChecksumException
 	 */
-	public static SPRFile readFile(String path) throws
+	public static ZSPRFile readFile(String path) throws
 		IOException, NotZSPRException, ObsoleteSPRFormatException, BadChecksumException {
 		if (!SpriteManipulator.testFileType(path, EXTENSION)) {
 			throw new NotZSPRException();
@@ -453,7 +453,7 @@ public class SPRFile {
 
 		// run a check sum
 		runChecksum(zSPR);
-		SPRFile ret = new SPRFile();
+		ZSPRFile ret = new ZSPRFile();
 
 		// find the sprite name
 		String spriteName = "";
