@@ -496,42 +496,28 @@ public abstract class SpriteManipulator {
 	 */
 	public static byte[] export8x8ToSPR(byte[][][] eightbyeight) {
 		// bit map
-		boolean[][][] fourbpp = new boolean[896][32][8];
-
-		for (int i = 0; i < fourbpp.length; i++) {
+		byte[] fourbpp = new byte[SPRITE_DATA_SIZE];
+		int pos = 0;
+		for (int i = 0; i < 896; i++) {
 			// each byte, as per bppi
-			for (int j = 0; j < fourbpp[0].length; j++) {
+			for (int j = 0; j < 32; j++) {
+				byte b = 0;
 				for (int k = 0; k < 8; k++) {
-					// get row r's bth bit plane, based on index j of bppi
+					// get row row's kth bit plane, based on index j of bppi
 					int row = BPPI[j][0];
 					int plane = BPPI[j][1];
 					int byteX = eightbyeight[i][row][k];
 					// AND the bits with 1000, 0100, 0010, 0001 to get bit in that location
-					boolean bitB = ( byteX & (1 << plane) ) > 0;
-					fourbpp[i][j][k] = bitB;
-				}
-			}
-		}
-
-		// byte map
-		byte[] bytemap = new byte[896*32];
-
-		int k = 0;
-		for (int i = 0; i < fourbpp.length; i++) {
-			for (int j = 0; j < fourbpp[0].length; j++) {
-				byte next = 0;
-				// turn true false into byte
-				for (boolean a : fourbpp[i][j]) {
-					next <<= 1;
-					next |= (a ? 1 : 0);
-				}
-				bytemap[k] = next;
-				k++;
-			}
-		}
-		// end 4BPP
-
-		return bytemap;
+					boolean bitOn = ( byteX & (1 << plane) ) > 0;
+					b <<= 1;
+					if (bitOn) {
+						b |= 1;
+					}
+				} // end 8 bits of byte calculation
+				fourbpp[pos++] = b;
+			} // end 32 bytes for 8x8 block
+		} // end 896 blocks of 8x8
+		return fourbpp;
 	}
 
 	/**
