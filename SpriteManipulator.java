@@ -67,19 +67,15 @@ public abstract class SpriteManipulator {
 	public static final int SPRITE_BLOCK_COUNT = 896;
 	public static final int SPRITE_BLOCK_SIZE = 32;
 	public static final int SPRITE_DATA_SIZE = SPRITE_BLOCK_COUNT * SPRITE_BLOCK_SIZE; // 28672
-	public static final int PAL_DATA_SIZE = 120; // 4 palettes, 15 colors, 2 bytes per color
-	public static final int GLOVE_DATA_SIZE = 4; // 2 colors, 2 bytes each
-
-	// data sizes for images
-	public static final int SPRITE_SHEET_WIDTH = 128;
-	public static final int SPRITE_SHEET_HEIGHT = 448;
-	public static final int INDEXED_RASTER_SIZE = SPRITE_SHEET_WIDTH * SPRITE_SHEET_HEIGHT;
-	public static final int ABGR_RASTER_SIZE = INDEXED_RASTER_SIZE * 4;
 
 	// data for operating with palettes
 	public static final int MAIL_PALETTE_SIZE = 16;
 	public static final int ALL_MAILS_PALETTE_SIZE = MAIL_PALETTE_SIZE * 4;
 	public static final int ALL_MAILS_WITH_GLOVES_SIZE = ALL_MAILS_PALETTE_SIZE + 2;
+	public static final int PAL_DATA_SIZE = 120; // 4 palettes, 15 colors, 2 bytes per color
+	public static final int GLOVE_DATA_SIZE = 4; // 2 colors, 2 bytes each
+	public static final byte[] VANILLA_GLOVE_COLORS =
+			new byte[] { (byte) 0xF6, (byte) 0x52, (byte) 0x76, (byte) 0x03 };
 
 	// ROM offsets
 	public static final int SPRITE_OFFSET = 0x80000;
@@ -87,8 +83,11 @@ public abstract class SpriteManipulator {
 	public static final int[] GLOVE_OFFSETS =
 			new int[] { 0xDEDF5, 0xDEDF6, 0xDEDF7, 0xDEDF8 }; // gloves, gloves, mitts, mitts
 
-	public static final byte[] VANILLA_GLOVE_COLORS =
-			new byte[] { (byte) 0xF6, (byte) 0x52, (byte) 0x76, (byte) 0x03 };
+	// data sizes for images
+	public static final int SPRITE_SHEET_WIDTH = 128;
+	public static final int SPRITE_SHEET_HEIGHT = 448;
+	public static final int INDEXED_RASTER_SIZE = SPRITE_SHEET_WIDTH * SPRITE_SHEET_HEIGHT;
+	public static final int ABGR_RASTER_SIZE = INDEXED_RASTER_SIZE * 4;
 
 	// format of snes 4bpp {row (r), bit plane (b)}
 	// bit plane 0 indexed such that 1011 corresponds to 0123
@@ -100,7 +99,7 @@ public abstract class SpriteManipulator {
 	};
 
 	// A (currently) unchanging palette switched to by the game when link is electrocuted
-	private static final byte[][] ZAPPALETTE = new byte[][] {
+	private static final byte[][] ZAP_PALETTE = new byte[][] {
 			{ 0, 0, 0},
 			{ 0, 0, 0},
 			{ -48, -72, 24},
@@ -378,7 +377,7 @@ public abstract class SpriteManipulator {
 			ret[i] = makeSheet(raster);
 		}
 
-		raster = makeRaster(eightbyeight, ZAPPALETTE);
+		raster = makeRaster(eightbyeight, ZAP_PALETTE);
 		ret[4] = makeSheet(raster);
 
 		return ret;
