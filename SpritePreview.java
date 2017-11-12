@@ -19,12 +19,33 @@ public class SpritePreview extends FileView {
 			} catch (IOException | NotZSPRException | ObsoleteSPRFormatException | BadChecksumException e) {
 				return new ImageIcon();
 			}
-			byte[][][] ebe = SpriteManipulator.makeSpr8x8(spr.getSpriteData());
+			byte[] spriteData = spr.getSpriteData();
+			byte[][][] ebe = SpriteManipulator.makeSpr8x8(spriteData);
+
+			// check for an empty head
+			boolean emptyHead = true;
+			checkHead:
+			for (int i = 0; i < 2; i++) {
+				int index = new int[] {2,18}[i]; // blocks that hold head data
+				int pos = index * SpriteManipulator.SPRITE_BLOCK_SIZE;
+				for (int j = 0; j < SpriteManipulator.SPRITE_BLOCK_SIZE * 2; j++, pos++) {
+					if (spriteData[pos] != 0) {
+						emptyHead = false;
+						break checkHead;
+					}
+				}
+			}
 			byte[][] pal = SpriteManipulator.getPal(spr.getPalData());
 			BufferedImage sheet = SpriteManipulator.makeSheet(SpriteManipulator.makeRaster(ebe, pal));
-			preview = sheet.getSubimage(16, 0, 16, 16);
+
+			// if empty, use cell B3
+			// otherwise use A1
+			int x = emptyHead ? 48 : 16;
+			int y = emptyHead ? 16 : 0;
+			preview = sheet.getSubimage(x, y, 16, 16);
+
 			return new ImageIcon(preview);
-		} else {
+		} else { // non zspr files can use their default icons
 			return super.getIcon(f);
 		}
 	}
