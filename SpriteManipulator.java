@@ -26,9 +26,9 @@ public abstract class SpriteManipulator {
 	};
 	public static final byte[] FLAG = { 'Z', 'S', 'P', 'R' };
 	public static final byte[] ZSPR_VERSION = { 1 }; // only 1 byte, but array for future proofing
-	public static final String SZPR_VERSION_TAG = "v1.0";
+	public static final String ZSPR_VERSION_TAG = "v1.0";
 	public static final String ZSPR_SPEC =
-			String.format("ZSPR (.ZSPR) version %s specification", SZPR_VERSION_TAG);
+			String.format("ZSPR (.ZSPR) version %s specification", ZSPR_VERSION_TAG);
 	public static final int[] CKSM_OFFSET_INDICES = getIndices(2); // where to find the checksum in file
 	public static final int[] SPRITE_OFFSET_INDICES = getIndices(3); // where to find the sprite offset in file
 	public static final int[] PAL_OFFSET_INDICES = getIndices(5); // where to find the palette offset in file
@@ -348,10 +348,10 @@ public abstract class SpriteManipulator {
 		BufferedImage image = new BufferedImage(128, 448, BufferedImage.TYPE_4BYTE_ABGR_PRE);
 		int[] rgb = new int[128 * 448];
 		for (int i = 0, j = 0; i < rgb.length; i++) {
-			int a = raster[j++] & 0xff;
-			int b = raster[j++] & 0xff;
-			int g = raster[j++] & 0xff;
-			int r = raster[j++] & 0xff;
+			int a = raster[j++] & 0xFF;
+			int b = raster[j++] & 0xFF;
+			int g = raster[j++] & 0xFF;
+			int r = raster[j++] & 0xFF;
 			rgb[i] = (a << 24) | (r << 16) | (g << 8) | b;
 		}
 		image.setRGB(0, 0, 128, 448, rgb, 0, 128);
@@ -536,7 +536,7 @@ public abstract class SpriteManipulator {
 
 	/**
 	 * Create binary palette data for appending to the end of the {@code .zspr} file.
-	 * @param pal - 64/66 length {@code int[]} contained the palette colors as RRRGGGBBB
+	 * @param pal - 64/66 length {@code int[]} containing the palette colors as RRRGGGBBB
 	 * @return {@code byte[]} containing palette data in 5:5:5 format
 	 */
 	public static byte[] getPalDataFromArray(int[] pal) {
@@ -685,7 +685,7 @@ public abstract class SpriteManipulator {
 	}
 
 	/**
-	 * Writes the image to an {@code .zspr} file.
+	 * Writes the image to a {@code .zspr} file.
 	 * @param map - SNES 4BPP file, including 5:5:5
 	 * @param loc - File path of exported sprite
 	 */
