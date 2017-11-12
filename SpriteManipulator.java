@@ -503,7 +503,7 @@ public abstract class SpriteManipulator {
 			for (int j = 0; j < 32; j++) {
 				byte b = 0;
 				for (int k = 0; k < 8; k++) {
-					// get row row's kth bit plane, based on index j of bppi
+					// get row's kth bit plane, based on index j of bppi
 					int row = BPPI[j][0];
 					int plane = BPPI[j][1];
 					int byteX = eightbyeight[i][row][k];
