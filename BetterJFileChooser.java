@@ -1,7 +1,6 @@
 package SpriteManipulator;
 
 import java.io.File;
-
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileFilter;
@@ -11,6 +10,11 @@ import javax.swing.filechooser.FileFilter;
  */
 public class BetterJFileChooser extends JFileChooser {
 	private static final long serialVersionUID = -7581065406880416887L;
+
+	public BetterJFileChooser() {
+		super();
+		this.setFileView(new SpritePreview());
+	}
 
 	public void approveSelection() {
 		File f = getSelectedFile();
