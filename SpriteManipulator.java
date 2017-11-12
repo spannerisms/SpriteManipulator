@@ -10,7 +10,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-public abstract class SpriteManipulator {
+public final class SpriteManipulator {
 	// ZSPR file format specifications
 	// Time stamp: 7 Nov 2017
 	public static final int[] BYTE_ALLOTMENTS = new int[] { // for calculating offsets
@@ -117,6 +117,11 @@ public abstract class SpriteManipulator {
 			{ 120, 48, -96},
 			{ -8, -8, -8}
 	};
+
+	/**
+	 * Prevent instantiation
+	 */
+	private SpriteManipulator() {}
 
 	/**
 	 * Indexes an image based on a palette.
