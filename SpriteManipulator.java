@@ -64,13 +64,22 @@ public abstract class SpriteManipulator {
 
 	// class constants
 	// data sizes for sprites
-	public static final int SPRITE_DATA_SIZE = 896 * 32; // 28672
-	public static final int PAL_DATA_SIZE = 0x78;
-	public static final int GLOVE_DATA_SIZE = 4;
+	public static final int SPRITE_BLOCK_COUNT = 896;
+	public static final int SPRITE_BLOCK_SIZE = 32;
+	public static final int SPRITE_DATA_SIZE = SPRITE_BLOCK_COUNT * SPRITE_BLOCK_SIZE; // 28672
+	public static final int PAL_DATA_SIZE = 120; // 4 palettes, 15 colors, 2 bytes per color
+	public static final int GLOVE_DATA_SIZE = 4; // 2 colors, 2 bytes each
 
 	// data sizes for images
-	public static final int RASTER_SIZE = 128 * 448 * 4;
-	public static final int INDEXED_RASTER_SIZE = 128 * 448;
+	public static final int SPRITE_SHEET_WIDTH = 128;
+	public static final int SPRITE_SHEET_HEIGHT = 448;
+	public static final int INDEXED_RASTER_SIZE = SPRITE_SHEET_WIDTH * SPRITE_SHEET_HEIGHT;
+	public static final int ABGR_RASTER_SIZE = INDEXED_RASTER_SIZE * 4;
+
+	// data for operating with palettes
+	public static final int MAIL_PALETTE_SIZE = 16;
+	public static final int ALL_MAILS_PALETTE_SIZE = MAIL_PALETTE_SIZE * 4;
+	public static final int ALL_MAILS_WITH_GLOVES_SIZE = ALL_MAILS_PALETTE_SIZE + 2;
 
 	// ROM offsets
 	public static final int SPRITE_OFFSET = 0x80000;
@@ -90,6 +99,7 @@ public abstract class SpriteManipulator {
 			{4,2},{4,3},{5,2},{5,3},{6,2},{6,3},{7,2},{7,3}
 	};
 
+	// A (currently) unchanging palette switched to by the game when link is electrocuted
 	private static final byte[][] ZAPPALETTE = new byte[][] {
 			{ 0, 0, 0},
 			{ 0, 0, 0},
@@ -121,26 +131,24 @@ public abstract class SpriteManipulator {
 	 * @param pal - palette colors
 	 */
 	public static byte[] index(byte[] pixels, int[] pal) {
-		int dis = INDEXED_RASTER_SIZE;
-
 		// all 8x8 squares, read left to right, top to bottom
 		byte[] ret = new byte[INDEXED_RASTER_SIZE];
 
 		// read image
-		for (int i = 0; i < dis; i++) {
+		for (int i = 0; i < INDEXED_RASTER_SIZE; i++) {
+			int pos = i * 4;
 			// get each color and get rid of sign
 			// colors are stored as {A,B,G,R,A,B,G,R...}
-			int b = Byte.toUnsignedInt(pixels[i*4+1]);
-			int g = Byte.toUnsignedInt(pixels[i*4+2]);
-			int r = Byte.toUnsignedInt(pixels[i*4+3]);
+			int b = Byte.toUnsignedInt(pixels[pos+1]);
+			int g = Byte.toUnsignedInt(pixels[pos+2]);
+			int r = Byte.toUnsignedInt(pixels[pos+3]);
 
-			// convert to 9 digits
-			int rgb = (1000000 * r) + (1000 * g) + b;
+			int rgb = toRGB9(r, g, b); // convert to 9 digits
 
 			// find palette index of current pixel
 			for (int s = 0; s < pal.length; s++) {
 				if (pal[s] == rgb) {
-					ret[i] = (byte) (s % 16); // mod 16 in case it reads another mail
+					ret[i] = (byte) (s % MAIL_PALETTE_SIZE); // mod 16 in case it reads another mail
 					break;
 				}
 			}
@@ -155,17 +163,16 @@ public abstract class SpriteManipulator {
 	 * @return {@code byte[][][]} representing the image as a grid of color indices
 	 */
 	public static byte[][][] get8x8(byte[] pixels) {
-		int dis = INDEXED_RASTER_SIZE;
 		int largeCol = 0;
 		int intRow = 0;
 		int intCol = 0;
 		int index = 0;
 
 		// all 8x8 squares, read left to right, top to bottom
-		byte[][][] eightbyeight = new byte[896][8][8];
+		byte[][][] eightbyeight = new byte[SPRITE_BLOCK_COUNT][8][8];
 
-		// read image
-		for (int i = 0; i < dis; i++) {
+		// read image raster
+		for (int i = 0; i < INDEXED_RASTER_SIZE; i++) {
 			eightbyeight[index][intRow][intCol] = pixels[i];
 
 			// count up square by square
@@ -186,10 +193,11 @@ public abstract class SpriteManipulator {
 					if (intRow == 8) {
 						index += 16;
 						intRow = 0;
-					}
-				}
-			}
-		}
+					} // end intRow if
+				} // end largeCol if
+			} // end intCol if
+		} // end loop
+
 		return eightbyeight;
 	}
 
@@ -207,38 +215,29 @@ public abstract class SpriteManipulator {
 	 * @param sprite
 	 */
 	public static byte[][][] makeSpr8x8(byte[] sprite) {
-		byte[][][] ret = new byte[896][8][8];
+		byte[][][] ret = new byte[SPRITE_BLOCK_COUNT][8][8];
 
 		// current block we're working on, each sized 32
-		// start at -1 since we're incrementing at 0mod32
-		int b = -1;
-		// locate where in interlacing map we're reading from
-		int g;
+		int b = -1; // start at -1 since we're incrementing at 0mod32
+
+		int g; // locates where in interlacing map we're reading from
+
 		for (int i = 0; i < SPRITE_DATA_SIZE; i++) {
-			// find interlacing index
-			g = i%32;
-			// increment at 0th index
-			if (g == 0) {
-				b++;
-			}
-			// row to look at
-			int r = BPPI[g][0];
-			// bit plane of byte
-			int p = BPPI[g][1];
+			g = i % SPRITE_BLOCK_SIZE; // find interlacing index
+			if (g == 0) { b++; } // increment at 0th index
 
-			// byte to unravel
-			byte q = sprite[i];
+			int r = BPPI[g][0]; // row to look at
+			int p = BPPI[g][1]; // bit plane of byte
+			byte q = sprite[i]; // byte to unravel
 
-			// run through the byte
-			for (int c = 0; c < 8; c++) {
-				// AND with 1 shifted to the correct plane
-				boolean bitOn = (q & (1 << (7-c))) != 0;
-				// if true, OR with that plane in index map
-				if (bitOn) {
-					ret[b][r][c] |= (1 << (p));
+			for (int c = 0; c < 8; c++) { // run through the byte
+				boolean bitOn = (q & (1 << (7-c))) != 0; // AND with 1 shifted to the correct plane
+				if (bitOn) { // if on (true), OR with that plane in index map
+					ret[b][r][c] |= (1 << p);
 				}
 			}
 		}
+
 		return ret;
 	}
 
@@ -248,10 +247,10 @@ public abstract class SpriteManipulator {
 	 * Automatically makes first index black.
 	 */
 	public static byte[][] getPal(byte[] pal) {
-		byte[][] ret = new byte[64][3];
+		byte[][] ret = new byte[ALL_MAILS_PALETTE_SIZE][3];
 		int byteLoc = 1;
-		for (int i = 0; i < 64; i++) {
-			if (i % 16 == 0) {
+		for (int i = 0; i < ALL_MAILS_PALETTE_SIZE; i++) {
+			if (i % MAIL_PALETTE_SIZE == 0) {
 				ret[0][0] = 0;
 				ret[0][1] = 0;
 				ret[0][2] = 0;
@@ -277,11 +276,13 @@ public abstract class SpriteManipulator {
 	 * @return
 	 */
 	public static byte[][] getSubpal(byte[][] pal, int palIndex) {
-		byte[][] ret = new byte[16][3];
-		int offset = palIndex * 16;
-		for (int i = 0; i < 16; i++) {
-				ret[i] = pal[i+offset];
+		byte[][] ret = new byte[MAIL_PALETTE_SIZE][3];
+		int pos = palIndex * MAIL_PALETTE_SIZE;
+
+		for (int i = 0; i < MAIL_PALETTE_SIZE; i++, pos++) {
+				ret[i] = pal[pos];
 		}
+
 		return ret;
 	}
 
@@ -289,30 +290,29 @@ public abstract class SpriteManipulator {
 	 * Turn index map in 8x8 format into an array of ABGR values.
 	 */
 	public static byte[] makeRaster(byte[][][] ebe, byte[][] palette) {
-		byte[] ret = new byte[RASTER_SIZE];
+		byte[] ret = new byte[ABGR_RASTER_SIZE];
+		byte[] color;
 		int largeCol = 0;
 		int intRow = 0;
 		int intCol = 0;
 		int index = 0;
-		byte[] color;
-		// read image
-		for (int i = 0; i < RASTER_SIZE / 4; i++) {
-			// get pixel color index
-			byte coli = ebe[index][intRow][intCol];
-			// get palette color
-			color = palette[coli];
-			// index 0 = trans
-			if (coli == 0) {
-				ret[i*4] = 0;
-			}
-			else {
-				ret[i*4] = (byte) 255;
+
+		// read image raster
+		for (int i = 0; i < ABGR_RASTER_SIZE / 4; i++) {
+			int pos = i * 4;
+			byte coli = ebe[index][intRow][intCol]; // get pixel color index
+			color = palette[coli]; // get palette color
+			
+			if (coli == 0) { // index 0 = trans
+				ret[pos] = 0;
+			} else {
+				ret[pos] = (byte) 255;
 			}
 
 			// BGR
-			ret[i*4+1] = color[2];
-			ret[i*4+2] = color[1];
-			ret[i*4+3] = color[0];
+			ret[pos+1] = color[2];
+			ret[pos+2] = color[1];
+			ret[pos+3] = color[0];
 
 			// count up square by square
 			// at 8, reset the "Interior column" which we use to locate the pixel in 8x8
@@ -332,10 +332,11 @@ public abstract class SpriteManipulator {
 					if (intRow == 8) {
 						index += 16;
 						intRow = 0;
-					}
-				}
-			}
-		}
+					} // end intRow if
+				} // end largeCol if
+			} // end intCol if
+		} // end loop
+
 		return ret;
 	}
 
@@ -345,8 +346,9 @@ public abstract class SpriteManipulator {
 	 * @return
 	 */
 	public static BufferedImage makeSheet(byte[] raster) {
-		BufferedImage image = new BufferedImage(128, 448, BufferedImage.TYPE_4BYTE_ABGR_PRE);
-		int[] rgb = new int[128 * 448];
+		BufferedImage image =
+			new BufferedImage(SPRITE_SHEET_WIDTH, SPRITE_SHEET_HEIGHT, BufferedImage.TYPE_4BYTE_ABGR_PRE);
+		int[] rgb = new int[INDEXED_RASTER_SIZE];
 		for (int i = 0, j = 0; i < rgb.length; i++) {
 			int a = raster[j++] & 0xFF;
 			int b = raster[j++] & 0xFF;
@@ -354,7 +356,8 @@ public abstract class SpriteManipulator {
 			int r = raster[j++] & 0xFF;
 			rgb[i] = (a << 24) | (r << 16) | (g << 8) | b;
 		}
-		image.setRGB(0, 0, 128, 448, rgb, 0, 128);
+
+		image.setRGB(0, 0, SPRITE_SHEET_WIDTH, SPRITE_SHEET_HEIGHT, rgb, 0, SPRITE_SHEET_WIDTH);
 
 		return image;
 	}
@@ -368,13 +371,14 @@ public abstract class SpriteManipulator {
 		BufferedImage[] ret = new BufferedImage[5];
 		byte[][] subpal;
 		byte[] raster;
+
 		for (int i = 0; i < 4; i++) {
 			subpal = getSubpal(pal, i);
-			raster = makeRaster(eightbyeight,subpal);
+			raster = makeRaster(eightbyeight, subpal);
 			ret[i] = makeSheet(raster);
 		}
 
-		raster = makeRaster(eightbyeight,ZAPPALETTE);
+		raster = makeRaster(eightbyeight, ZAPPALETTE);
 		ret[4] = makeSheet(raster);
 
 		return ret;
@@ -388,24 +392,23 @@ public abstract class SpriteManipulator {
 	 * @throws FileNotFoundException
 	 */
 	public static void patchRom(String romTarget, ZSPRFile spr) throws IOException, FileNotFoundException {
-		// Acquire ROM data
-		byte[] rom_patch;
+		// get ROM data
+		byte[] romStream;
 		FileInputStream fsInput = new FileInputStream(romTarget);
-		rom_patch = new byte[(int) fsInput.getChannel().size()];
-		fsInput.read(rom_patch);
+		romStream = new byte[(int) fsInput.getChannel().size()];
+		fsInput.read(romStream);
 		fsInput.getChannel().position(0);
 		fsInput.close();
 
-		// filestream save .zspr file to ROM
 		FileOutputStream fsOut = new FileOutputStream(romTarget);
 
-		// grab relevant data
+		// grab relevant data from zspr file
 		byte[] sprData = spr.getSpriteData();
 		byte[] palData = spr.getPalData();
 		byte[] glovesData = spr.getGlovesData();
 
 		for(int i = 0; i < SPRITE_DATA_SIZE; i++) {
-			rom_patch[SPRITE_OFFSET + i] = sprData[i];
+			romStream[SPRITE_OFFSET + i] = sprData[i];
 		}
 
 		// Check to see if glove colors are defined
@@ -416,22 +419,23 @@ public abstract class SpriteManipulator {
 				break;
 			}
 		}
+
 		// if not defined, skip this step
 		// otherwise write to the correct indices
 		if (noneSet) {
 			// do nothing
 		} else {
 			for (int i = 0; i < 4; i++) {
-				rom_patch[GLOVE_OFFSETS[i]] = glovesData[i];
+				romStream[GLOVE_OFFSETS[i]] = glovesData[i];
 			}
 		}
 
 		// add palette data to ROM
 		for (int i = 0; i < PAL_DATA_SIZE; i++) {
-			rom_patch[PAL_OFFSET + i] = palData[i];
+			romStream[PAL_OFFSET + i] = palData[i];
 		}
 
-		fsOut.write(rom_patch, 0, rom_patch.length);
+		fsOut.write(romStream, 0, romStream.length);
 		fsOut.close();
 	}
 
@@ -495,24 +499,22 @@ public abstract class SpriteManipulator {
 	 * @return new byte array in SNES4BPP format
 	 */
 	public static byte[] export8x8ToSPR(byte[][][] eightbyeight) {
-		// bit map
 		byte[] fourbpp = new byte[SPRITE_DATA_SIZE];
 		int pos = 0;
-		for (int i = 0; i < 896; i++) {
-			// each byte, as per bppi
-			for (int j = 0; j < 32; j++) {
+
+		for (int i = 0; i < SPRITE_BLOCK_COUNT; i++) { // for each block
+			for (int j = 0; j < SPRITE_BLOCK_SIZE; j++) { // each byte, as per bppi
 				byte b = 0;
 				for (int k = 0; k < 8; k++) {
 					// get row's kth bit plane, based on index j of bppi
 					int row = BPPI[j][0];
 					int plane = BPPI[j][1];
 					int byteX = eightbyeight[i][row][k];
+
 					// AND the bits with 1000, 0100, 0010, 0001 to get bit in that location
-					boolean bitOn = ( byteX & (1 << plane) ) > 0;
+					boolean bitOn = (byteX & (1 << plane)) > 0;
 					b <<= 1;
-					if (bitOn) {
-						b |= 1;
-					}
+					if (bitOn) { b |= 1; }
 				} // end 8 bits of byte calculation
 				fourbpp[pos++] = b;
 			} // end 32 bytes for 8x8 block
@@ -526,21 +528,20 @@ public abstract class SpriteManipulator {
 	 * @return {@code byte[]} containing palette data in 5:5:5 format
 	 */
 	public static byte[] getPalDataFromArray(int[] pal) {
-		// create palette data as 5:5:5
-		ByteBuffer palRet = ByteBuffer.allocate(0x78);
+		ByteBuffer palRet = ByteBuffer.allocate(PAL_DATA_SIZE); // create palette data as 5:5:5
 
-		for (int i = 1; i < 16; i++) {
+		for (int i = 1; i < MAIL_PALETTE_SIZE; i++) {
 			for (int t = 0; t < 4; t++) {
-				int r = pal[i+16*t] / 1000000;
-				int g = (pal[i+16*t] % 1000000) / 1000;
-				int b = pal[i+16*t] % 1000;
-				short s = (short) ((( b / 8) << 10) | ((( g / 8) << 5) | ((( r / 8) << 0))));
+				int cur = pal[i + (MAIL_PALETTE_SIZE * t)];
+				int r = cur / 1000000;
+				int g = (cur % 1000000) / 1000;
+				int b = cur % 1000;
+				short s = (short) ((( b / 8) << 10) | (( g / 8) << 5) | (( r / 8) << 0));
 				// put color into every mail palette
 				palRet.putShort(30*t+((i-1)*2),Short.reverseBytes(s));
 			}
 		}
 
-		// end palette
 		return palRet.array();
 	}
 
@@ -550,23 +551,25 @@ public abstract class SpriteManipulator {
 	 */
 	public static byte[] getGlovesDataFromArray(int[] pal) {
 		int l = pal.length;
-		assert l == 64 || l == 66;
-		if (l != 66) {
+		assert l == ALL_MAILS_PALETTE_SIZE || l == ALL_MAILS_WITH_GLOVES_SIZE;
+
+		if (l != ALL_MAILS_WITH_GLOVES_SIZE) { // when no data defined in here
 			return new byte[] { 0, 0, 0, 0 };
 		}
 
-		ByteBuffer palRet = ByteBuffer.allocate(4);
-		int palI = 64;
-		for (int i = 0; i < 2; i++, palI++) {
-				int r = pal[palI] / 1000000;
-				int g = (pal[palI] % 1000000) / 1000;
-				int b = pal[palI] % 1000;
-				short s = (short) ((( b / 8) << 10) | ((( g / 8) << 5) | ((( r / 8) << 0))));
-				// put color
-				palRet.putShort(i*2,Short.reverseBytes(s));
+		ByteBuffer palRet = ByteBuffer.allocate(GLOVE_DATA_SIZE);
+		int loc = ALL_MAILS_PALETTE_SIZE; // start at end of palette
+
+		for (int i = 0; i < 2; i++, loc++) {
+			int cur = pal[loc];
+			int r = cur / 1000000;
+			int g = (cur % 1000000) / 1000;
+			int b = cur % 1000;
+
+			short s = (short) ((( b / 8) << 10) | (( g / 8) << 5) | (( r / 8) << 0));
+			palRet.putShort(i*2,Short.reverseBytes(s)); // put color
 		}
 
-		// end palette
 		return palRet.array();
 	}
 
@@ -577,10 +580,10 @@ public abstract class SpriteManipulator {
 	public static int[] roundPalette(int[] pal) {
 		int[] ret = new int[pal.length];
 		for (int i = 0; i < pal.length; i++) {
-			int color = pal[i];
-			int r = color / 1000000;
-			int g = (color % 1000000) / 1000;
-			int b = color % 1000;
+			int cur = pal[i];
+			int r = cur / 1000000;
+			int g = (cur % 1000000) / 1000;
+			int b = cur % 1000;
 			r = roundVal(r);
 			g = roundVal(g);
 			b = roundVal(b);
@@ -676,8 +679,7 @@ public abstract class SpriteManipulator {
 	 * @param loc - File path of exported sprite
 	 */
 	public static void writeFile(byte[] map, String loc) throws IOException {
-		// create a file at directory
-		new File(loc);
+		new File(loc); // create a file at directory
 
 		FileOutputStream fileOuputStream = new FileOutputStream(loc);
 		try {
@@ -741,24 +743,32 @@ public abstract class SpriteManipulator {
 		return ret;
 	}
 
-	public static void writeSPRFile(String loc, ZSPRFile s)
+	/**
+	 * Writes a ZSPR file to the file name provided
+	 * @param loc
+	 * @param s
+	 * @throws IOException
+	 * @throws NotZSPRException
+	 * @throws BadChecksumException
+	 */
+	public static void writeSPRFile(String path, ZSPRFile s)
 			throws IOException, NotZSPRException, BadChecksumException {
-		int dl = loc.lastIndexOf('.');
+		int dl = path.lastIndexOf('.');
 
 		// test file type
 		if (dl == -1) { // no extension
 			throw new NotZSPRException();
-		} else if (!testFileType(loc, ZSPRFile.EXTENSION)) { // file is not .zspr
+		} else if (!testFileType(path, ZSPRFile.EXTENSION)) { // file is not .zspr
 			throw new NotZSPRException();
 		}
 
 		// test sprite name
 		if (s.getSpriteName().equals("")) {
-			s.setNameFromPath(loc);
+			s.setNameFromPath(path);
 		}
 
 		s.runSelfChecksum();
 		byte[] file = s.getDataStream();
-		writeFile(file, loc);
+		writeFile(file, path);
 	}
 }
