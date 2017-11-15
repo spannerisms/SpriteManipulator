@@ -450,7 +450,7 @@ public class ZSPRFile {
 	public static ZSPRFile readFile(String path) throws
 		IOException, ZSPRFormatException {
 		if (!SpriteManipulator.testFileType(path, EXTENSION)) {
-			throw new ZSPRFormatException("File is not a " + EXTENSION + " file");
+			throw new ZSPRFormatException("File is not a " + EXTENSION + " file.");
 		}
 
 		byte[] zSPR = SpriteManipulator.readFile(path);
