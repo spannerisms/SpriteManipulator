@@ -469,7 +469,7 @@ public class ZSPRFile {
 		}
 
 		if (!(spriteType[0] == 0x01 && spriteType[1] == 0x00)) {
-			throw new ZSPRFormatException("");
+			throw new ZSPRFormatException("The selected sprite is not a playable character sprite.");
 		}
 		// run a check sum
 		runChecksum(zSPR);
