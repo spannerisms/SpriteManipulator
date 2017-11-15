@@ -32,9 +32,7 @@ public class SpritePreview extends FileView {
 			try {
 				spr = ZSPRFile.readFile(path);
 			} catch (IOException
-					| NotZSPRException
-					| ObsoleteSPRFormatException
-					| BadChecksumException e) {
+					| ZSPRFormatException e) {
 				return new ImageIcon();
 			}
 

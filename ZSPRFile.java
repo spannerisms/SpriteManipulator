@@ -12,7 +12,8 @@ public class ZSPRFile {
 	private static final byte[] FLAG = SpriteManipulator.FLAG;
 	private static final byte[] ZSPR_VERSION = SpriteManipulator.ZSPR_VERSION;
 	private static final String ZSPR_SPEC = SpriteManipulator.ZSPR_SPEC;
-	private static final int[] CKSM_OFFSET_INDICES = SpriteManipulator.CKSM_OFFSET_INDICES;
+	private static final int[] CKSM_INDICES = SpriteManipulator.CKSM_INDICES;
+	private static final int[] TYPE_INDICES = SpriteManipulator.TYPE_INDICES;
 	private static final int[] SPRITE_OFFSET_INDICES = SpriteManipulator.SPRITE_OFFSET_INDICES;
 	private static final int[] PAL_OFFSET_INDICES = SpriteManipulator.PAL_OFFSET_INDICES;
 	private static final int SPRITE_NAME_OFFSET = SpriteManipulator.SPRITE_NAME_OFFSET;
@@ -61,11 +62,16 @@ public class ZSPRFile {
 	 *  </tr>
 	 *  <tr>
 	 *    <td>7</td>
-	 *    <td>reserved</td>
-	 *    <td>8</td>
+	 *    <td>sprite type</td>
+	 *    <td>2</td>
 	 *  </tr>
 	 *  <tr>
 	 *    <td>8</td>
+	 *    <td>reserved</td>
+	 *    <td>6</td>
+	 *  </tr>
+	 *  <tr>
+	 *    <td>9</td>
 	 *    <td>sprite name</td>
 	 *    <td>...</td>
 	 *  </tr>
@@ -83,7 +89,8 @@ public class ZSPRFile {
 	private static final int PAL_OFFSET_SIZE = BYTE_ALLOTMENTS[5];
 	@SuppressWarnings("unused")
 	private static final int PAL_DATA_INFO_SIZE = BYTE_ALLOTMENTS[6];
-	private static final int RESERVED_SIZE = BYTE_ALLOTMENTS[7];
+	private static final int TYPE_SIZE = BYTE_ALLOTMENTS[7];
+	private static final int RESERVED_SIZE = BYTE_ALLOTMENTS[8];
 	private static final int NAME_ROM_MAX_LENGTH = SpriteManipulator.NAME_ROM_MAX_LENGTH;
 
 	// class constants
@@ -280,6 +287,11 @@ public class ZSPRFile {
 			ret.add(b);
 		}
 
+		// add sprite type 01 00 for player sprite
+		for (byte b : new byte[] { 1, 0 }) {
+			ret.add(b);
+		}
+
 		// add reserved (constant size)
 		for (byte b : new byte[RESERVED_SIZE]) {
 			ret.add(b);
@@ -364,7 +376,7 @@ public class ZSPRFile {
 
 		// add checksum to file
 		for (int i = 0; i < CHECKSUM_SIZE; i++) {
-			dataStream[CKSM_OFFSET_INDICES[i]] = chalksome[i];
+			dataStream[CKSM_INDICES[i]] = chalksome[i];
 		}
 	}
 
@@ -396,7 +408,7 @@ public class ZSPRFile {
 	 * @return
 	 * @throws BadChecksumException
 	 */
-	public boolean runSelfChecksum() throws BadChecksumException {
+	public boolean runSelfChecksum() throws ZSPRFormatException {
 		refreshDataStream();
 		return runChecksum(dataStream);
 	}
@@ -407,10 +419,10 @@ public class ZSPRFile {
 	 * @return
 	 * @throws BadChecksumException
 	 */
-	public static boolean runChecksum(byte[] spr) throws BadChecksumException {
+	public static boolean runChecksum(byte[] spr) throws ZSPRFormatException {
 		byte[] myCksm = new byte[CHECKSUM_SIZE]; // stored checksum
 		for (int i = 0; i < CHECKSUM_SIZE; i++) {
-			myCksm[i] = spr[CKSM_OFFSET_INDICES[i]];
+			myCksm[i] = spr[CKSM_INDICES[i]];
 		}
 
 		byte[] chestsum = calcChecksum(spr); // test checksum
@@ -422,7 +434,7 @@ public class ZSPRFile {
 		}
 
 		if (badSum) {
-			throw new BadChecksumException();
+			throw new ZSPRFormatException("Bad checksum; file may be corrupted.");
 		}
 		return true;
 	}
@@ -436,9 +448,9 @@ public class ZSPRFile {
 	 * @throws BadChecksumException
 	 */
 	public static ZSPRFile readFile(String path) throws
-		IOException, NotZSPRException, ObsoleteSPRFormatException, BadChecksumException {
+		IOException, ZSPRFormatException {
 		if (!SpriteManipulator.testFileType(path, EXTENSION)) {
-			throw new NotZSPRException();
+			throw new ZSPRFormatException("File is not a " + EXTENSION + " file");
 		}
 
 		byte[] zSPR = SpriteManipulator.readFile(path);
@@ -446,11 +458,19 @@ public class ZSPRFile {
 		// check for ZSPR file header
 		for (int i = 0; i < 4; i++) {
 			if (zSPR[i] != FLAG[i]) {
-				throw new ObsoleteSPRFormatException(
+				throw new ZSPRFormatException(
 						"Obsolete file format; please convert to " + ZSPR_SPEC);
 			}
 		}
 
+		byte[] spriteType = new byte[TYPE_SIZE];
+		for (int i = 0; i < TYPE_SIZE; i++) {
+			spriteType[i] = zSPR[TYPE_INDICES[i]];
+		}
+
+		if (!(spriteType[0] == 0x01 && spriteType[1] == 0x00)) {
+			throw new ZSPRFormatException("");
+		}
 		// run a check sum
 		runChecksum(zSPR);
 		ZSPRFile ret = new ZSPRFile();

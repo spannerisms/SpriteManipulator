@@ -21,17 +21,19 @@ public final class SpriteManipulator {
 		2, // 4: sprite data size
 		4, // 5: pal data offset
 		2, // 6: pal data size
-		8, // 7: reserved
-			// 8 : sprite name
+		2, // 7: sprite type (0x01 00 = player)
+		6, // 8: reserved
+			// 9 : sprite name
 	};
 	public static final byte[] FLAG = { 'Z', 'S', 'P', 'R' };
 	public static final byte[] ZSPR_VERSION = { 1 }; // only 1 byte, but array for future proofing
 	public static final String ZSPR_VERSION_TAG = "v1.0";
 	public static final String ZSPR_SPEC =
 			String.format("ZSPR (.ZSPR) version %s specification", ZSPR_VERSION_TAG);
-	public static final int[] CKSM_OFFSET_INDICES = getIndices(2); // where to find the checksum in file
+	public static final int[] CKSM_INDICES = getIndices(2); // where to find the checksum in file
 	public static final int[] SPRITE_OFFSET_INDICES = getIndices(3); // where to find the sprite offset in file
 	public static final int[] PAL_OFFSET_INDICES = getIndices(5); // where to find the palette offset in file
+	public static final int[] TYPE_INDICES = getIndices(7); // where to find the checksum in file
 	public static final int SPRITE_NAME_OFFSET = calcOffset(8);
 	public static final int NAME_ROM_MAX_LENGTH = 20;
 
@@ -756,14 +758,14 @@ public final class SpriteManipulator {
 	 * @throws BadChecksumException
 	 */
 	public static void writeSPRFile(String path, ZSPRFile s)
-			throws IOException, NotZSPRException, BadChecksumException {
+			throws IOException, ZSPRFormatException {
 		int dl = path.lastIndexOf('.');
 
 		// test file type
 		if (dl == -1) { // no extension
-			throw new NotZSPRException();
+			throw new IOException();
 		} else if (!testFileType(path, ZSPRFile.EXTENSION)) { // file is not .zspr
-			throw new NotZSPRException();
+			throw new ZSPRFormatException("File is not a " + ZSPRFile.EXTENSION + " file.");
 		}
 
 		// test sprite name
