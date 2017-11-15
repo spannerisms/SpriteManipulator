@@ -12,7 +12,7 @@ public class ZSPRFile {
 	private static final byte[] FLAG = SpriteManipulator.FLAG;
 	private static final byte[] ZSPR_VERSION = SpriteManipulator.ZSPR_VERSION;
 	private static final String ZSPR_SPEC = SpriteManipulator.ZSPR_SPEC;
-	private static final int[] CKSM_INDICES = SpriteManipulator.CKSM_INDICES;
+	private static final int[] CHECKSUM_INDICES = SpriteManipulator.CHECKSUM_INDICES;
 	private static final int[] TYPE_INDICES = SpriteManipulator.TYPE_INDICES;
 	private static final int[] SPRITE_OFFSET_INDICES = SpriteManipulator.SPRITE_OFFSET_INDICES;
 	private static final int[] PAL_OFFSET_INDICES = SpriteManipulator.PAL_OFFSET_INDICES;
@@ -376,7 +376,7 @@ public class ZSPRFile {
 
 		// add checksum to file
 		for (int i = 0; i < CHECKSUM_SIZE; i++) {
-			dataStream[CKSM_INDICES[i]] = chalksome[i];
+			dataStream[CHECKSUM_INDICES[i]] = chalksome[i];
 		}
 	}
 
@@ -422,7 +422,7 @@ public class ZSPRFile {
 	public static boolean runChecksum(byte[] spr) throws ZSPRFormatException {
 		byte[] myCksm = new byte[CHECKSUM_SIZE]; // stored checksum
 		for (int i = 0; i < CHECKSUM_SIZE; i++) {
-			myCksm[i] = spr[CKSM_INDICES[i]];
+			myCksm[i] = spr[CHECKSUM_INDICES[i]];
 		}
 
 		byte[] chestsum = calcChecksum(spr); // test checksum

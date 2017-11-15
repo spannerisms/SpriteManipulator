@@ -30,7 +30,7 @@ public final class SpriteManipulator {
 	public static final String ZSPR_VERSION_TAG = "v1.0";
 	public static final String ZSPR_SPEC =
 			String.format("ZSPR (.ZSPR) version %s specification", ZSPR_VERSION_TAG);
-	public static final int[] CKSM_INDICES = getIndices(2); // where to find the checksum in file
+	public static final int[] CHECKSUM_INDICES = getIndices(2); // where to find the checksum in file
 	public static final int[] SPRITE_OFFSET_INDICES = getIndices(3); // where to find the sprite offset in file
 	public static final int[] PAL_OFFSET_INDICES = getIndices(5); // where to find the palette offset in file
 	public static final int[] TYPE_INDICES = getIndices(7); // where to find the checksum in file
