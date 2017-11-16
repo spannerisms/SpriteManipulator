@@ -7,5 +7,6 @@ public class ZSPRFormatException extends Exception {
 		super(message);
 	}
 
-	public ZSPRFormatException() {}
+	@SuppressWarnings("unused")
+	private ZSPRFormatException() {}
 }
