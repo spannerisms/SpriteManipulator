@@ -397,7 +397,7 @@ public final class SpriteManipulator {
 	 * @throws IOException
 	 * @throws FileNotFoundException
 	 */
-	public static void patchRom(String romTarget, ZSPRFile spr) throws IOException, FileNotFoundException {
+	public static void patchRom(String romTarget, ZSPRFile spr) throws IOException {
 		// get ROM data
 		byte[] romStream;
 		FileInputStream fsInput = new FileInputStream(romTarget);
@@ -452,7 +452,7 @@ public final class SpriteManipulator {
 	 * @throws IOException
 	 * @throws FileNotFoundException
 	 */
-	public static byte[] getSprFromROM(String romPath) throws IOException, FileNotFoundException {
+	public static byte[] getSprFromROM(String romPath) throws IOException {
 		byte[] ROM = readFile(romPath);
 		byte[] ret = new byte[SPRITE_DATA_SIZE];
 
@@ -470,7 +470,7 @@ public final class SpriteManipulator {
 	 * @throws IOException
 	 * @throws FileNotFoundException
 	 */
-	public static byte[] getPalFromROM(String romPath) throws IOException, FileNotFoundException {
+	public static byte[] getPalFromROM(String romPath) throws IOException {
 		byte[] ROM = readFile(romPath);
 		byte[] ret = new byte[PAL_DATA_SIZE];
 
@@ -488,7 +488,7 @@ public final class SpriteManipulator {
 	 * @throws IOException
 	 * @throws FileNotFoundException
 	 */
-	public static byte[] getGlovesFromROM(String romPath) throws IOException, FileNotFoundException {
+	public static byte[] getGlovesFromROM(String romPath) throws IOException {
 		byte[] ROM = readFile(romPath);
 		byte[] ret = new byte[GLOVE_DATA_SIZE];
 
