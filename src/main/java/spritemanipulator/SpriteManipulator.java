@@ -12,7 +12,7 @@ import java.nio.ByteBuffer;
 
 public final class SpriteManipulator {
 	// ALTTPNG
-	public static final String ALTTP_VERSION = "v1.7.0";
+	public static final String ALTTPNG_VERSION = "v1.7.0";
 
 	// ZSPR file format specifications
 	// Time stamp: 7 Nov 2017

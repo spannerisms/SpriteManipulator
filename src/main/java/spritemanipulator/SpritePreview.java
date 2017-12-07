@@ -13,14 +13,14 @@ public class SpritePreview extends FileView {
 	private static BufferedImage PALETTE_ICON; {
 		try {
 			PALETTE_ICON = ImageIO.read(SpritePreview.class.getResourceAsStream(
-					"/SpriteManipulator/images/fileicon-palette.png"));
+					"/images/fileicon-palette.png"));
 		} catch (IOException e) {
 	}};
 
 	private static BufferedImage ROM_ICON; {
 		try {
 			ROM_ICON = ImageIO.read(SpritePreview.class.getResourceAsStream(
-					"/SpriteManipulator/images/fileicon-rom.png"));
+					"/images/fileicon-rom.png"));
 		} catch (IOException e) {
 	}};
 
