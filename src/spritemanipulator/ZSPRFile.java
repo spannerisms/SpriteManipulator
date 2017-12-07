@@ -71,16 +71,12 @@ public class ZSPRFile {
 	 *  </tr>
 	 * </table>
 	 */
-	@SuppressWarnings("unused")
 	private static final int FLAG_SIZE = BYTE_ALLOTMENTS[0];
-	@SuppressWarnings("unused")
 	private static final int VERSION_SIZE = BYTE_ALLOTMENTS[1];
 	private static final int CHECKSUM_SIZE = BYTE_ALLOTMENTS[2];
 	private static final int SPRITE_OFFSET_SIZE = BYTE_ALLOTMENTS[3];
-	@SuppressWarnings("unused")
 	private static final int SPRITE_DATA_INFO_SIZE = BYTE_ALLOTMENTS[4];
 	private static final int PAL_OFFSET_SIZE = BYTE_ALLOTMENTS[5];
-	@SuppressWarnings("unused")
 	private static final int PAL_DATA_INFO_SIZE = BYTE_ALLOTMENTS[6];
 	private static final int TYPE_SIZE = BYTE_ALLOTMENTS[7];
 	private static final int RESERVED_SIZE = BYTE_ALLOTMENTS[8];
