@@ -1,4 +1,4 @@
-package SpriteManipulator;
+package spritemanipulator;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorConvertOp;
@@ -11,6 +11,9 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 public final class SpriteManipulator {
+	// ALTTPNG
+	public static final String ALTTP_VERSION = "v1.7.0";
+
 	// ZSPR file format specifications
 	// Time stamp: 7 Nov 2017
 	public static final int[] BYTE_ALLOTMENTS = new int[] { // for calculating offsets
