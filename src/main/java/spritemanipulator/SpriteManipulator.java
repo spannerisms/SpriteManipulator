@@ -412,8 +412,6 @@ public final class SpriteManipulator {
 			fsInput.getChannel().position(0);
 			fsInput.close();
 	
-			
-	
 			// grab relevant data from zspr file
 			byte[] sprData = spr.getSpriteData();
 			byte[] palData = spr.getPalData();
@@ -448,6 +446,7 @@ public final class SpriteManipulator {
 			}
 	
 			fsOut.write(romStream, 0, romStream.length);
+			fsOut.close();
 		}
 	}
 
