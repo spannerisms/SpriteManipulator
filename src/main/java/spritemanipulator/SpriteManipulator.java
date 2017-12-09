@@ -404,49 +404,53 @@ public final class SpriteManipulator {
 		// get ROM data
 		byte[] romStream;
 		try (
-				FileInputStream fsInput = new FileInputStream(romTarget);
-				FileOutputStream fsOut = new FileOutputStream(romTarget);
+				FileInputStream fsInput = new FileInputStream(romTarget)
 		) {
 			romStream = new byte[(int) fsInput.getChannel().size()];
 			fsInput.read(romStream);
 			fsInput.getChannel().position(0);
 			fsInput.close();
-	
-			// grab relevant data from zspr file
-			byte[] sprData = spr.getSpriteData();
-			byte[] palData = spr.getPalData();
-			byte[] glovesData = spr.getGlovesData();
-	
-			for(int i = 0; i < SPRITE_DATA_SIZE; i++) {
-				romStream[SPRITE_OFFSET + i] = sprData[i];
-			}
-	
-			// Check to see if glove colors are defined
-			boolean noneSet = true;
-			for (byte b : glovesData) {
-				if (b != 0) {
-					noneSet = false;
-					break;
+
+			try (
+				FileOutputStream fsOut = new FileOutputStream(romTarget)
+			) {
+
+				// grab relevant data from zspr file
+				byte[] sprData = spr.getSpriteData();
+				byte[] palData = spr.getPalData();
+				byte[] glovesData = spr.getGlovesData();
+
+				for(int i = 0; i < SPRITE_DATA_SIZE; i++) {
+					romStream[SPRITE_OFFSET + i] = sprData[i];
 				}
-			}
-	
-			// if not defined, skip this step
-			// otherwise write to the correct indices
-			if (noneSet) {
-				// do nothing
-			} else {
-				for (int i = 0; i < 4; i++) {
-					romStream[GLOVE_OFFSETS[i]] = glovesData[i];
+
+				// Check to see if glove colors are defined
+				boolean noneSet = true;
+				for (byte b : glovesData) {
+					if (b != 0) {
+						noneSet = false;
+						break;
+					}
 				}
+
+				// if not defined, skip this step
+				// otherwise write to the correct indices
+				if (noneSet) {
+					// do nothing
+				} else {
+					for (int i = 0; i < 4; i++) {
+						romStream[GLOVE_OFFSETS[i]] = glovesData[i];
+					}
+				}
+
+				// add palette data to ROM
+				for (int i = 0; i < PAL_DATA_SIZE; i++) {
+					romStream[PAL_OFFSET + i] = palData[i];
+				}
+
+				fsOut.write(romStream, 0, romStream.length);
+				fsOut.close();
 			}
-	
-			// add palette data to ROM
-			for (int i = 0; i < PAL_DATA_SIZE; i++) {
-				romStream[PAL_OFFSET + i] = palData[i];
-			}
-	
-			fsOut.write(romStream, 0, romStream.length);
-			fsOut.close();
 		}
 	}
 
