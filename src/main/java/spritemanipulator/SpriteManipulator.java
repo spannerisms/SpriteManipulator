@@ -12,7 +12,7 @@ import java.nio.ByteBuffer;
 
 public final class SpriteManipulator {
 	// ALTTPNG
-	public static final String ALTTPNG_VERSION = "v1.7.0";
+	public static final String ALTTPNG_VERSION = "v1.8.0";
 
 	// ZSPR file format specifications
 	// Time stamp: 7 Nov 2017
@@ -264,19 +264,31 @@ public final class SpriteManipulator {
 				ret[0][1] = 0;
 				ret[0][2] = 0;
 			} else {
-				short color = 0;
 				int pos = (byteLoc++ * 2) - 2;
-				color = (short) Byte.toUnsignedInt(pal[pos+1]);
-				color <<= 8;
-				color |= (short) Byte.toUnsignedInt(pal[pos]);
-
-				ret[i][0] = (byte) (((color >> 0) & 0x1F) << 3);
-				ret[i][1] = (byte) (((color >> 5) & 0x1F) << 3);
-				ret[i][2] = (byte) (((color >> 10) & 0x1F) << 3);
+				ret[i] = getRGB(pal[pos], pal[pos+1]);
 			}
 		}
 
 		return ret;
+	}
+
+	public static byte[] getRGB(byte c555a, byte c555b) {
+		byte[] ret = new byte[3];
+
+		short color = 0;
+		color = (short) Byte.toUnsignedInt(c555b);
+		color <<= 8;
+		color |= (short) Byte.toUnsignedInt(c555a);
+
+		ret[0] = (byte) (((color >> 0) & 0x1F) << 3);
+		ret[1] = (byte) (((color >> 5) & 0x1F) << 3);
+		ret[2] = (byte) (((color >> 10) & 0x1F) << 3);
+
+		return ret;
+	}
+
+	public static byte[] getRGB(byte[] c555) {
+		return getRGB(c555[0], c555[1]);
 	}
 
 	/**
@@ -284,14 +296,17 @@ public final class SpriteManipulator {
 	 * @param pal
 	 * @return
 	 */
-	public static byte[][] getSubpal(byte[][] pal, int palIndex) {
+	public static byte[][] getSubpal(byte[][] pal, byte[] gloveColor, int palIndex) {
 		byte[][] ret = new byte[MAIL_PALETTE_SIZE][3];
 		int pos = palIndex * MAIL_PALETTE_SIZE;
 
 		for (int i = 0; i < MAIL_PALETTE_SIZE; i++, pos++) {
-				ret[i] = pal[pos];
+			ret[i] = pal[pos];
 		}
 
+		if (gloveColor != null) {
+			ret[13] = gloveColor;
+		}
 		return ret;
 	}
 
@@ -311,7 +326,7 @@ public final class SpriteManipulator {
 			int pos = i * 4;
 			byte coli = ebe[index][intRow][intCol]; // get pixel color index
 			color = palette[coli]; // get palette color
-			
+
 			if (coli == 0) { // index 0 = trans
 				ret[pos] = 0;
 			} else {
@@ -376,19 +391,36 @@ public final class SpriteManipulator {
 	 * @param eightbyeight
 	 * @param pal
 	 */
-	public static BufferedImage[] makeAllMails(byte[][][] eightbyeight, byte[][] pal) {
-		BufferedImage[] ret = new BufferedImage[5];
+	public static BufferedImage[][] makeAllMails(byte[][][] eightbyeight, byte[] pal, byte[] gloves) {
+		BufferedImage[][] ret = new BufferedImage[5][3];
+
+		byte[][] rgbPal = getPal(pal);
+		byte[][] rgbGloves = new byte[3][3];
+
+		int pos = 0;
+		rgbGloves[0] = null;
+		rgbGloves[1] = getRGB(gloves[pos++], gloves[pos++]);
+		rgbGloves[2] = getRGB(gloves[pos++], gloves[pos++]);
+
 		byte[][] subpal;
 		byte[] raster;
+		byte[] curGlove;
 
 		for (int i = 0; i < 4; i++) {
-			subpal = getSubpal(pal, i);
-			raster = makeRaster(eightbyeight, subpal);
-			ret[i] = makeSheet(raster);
+			for (int j = 0; j < 3; j++) {
+				if (i == 3) { // if bunny
+					curGlove = null; // no glove palette change at all
+				} else {
+					curGlove = rgbGloves[j];
+				}
+				subpal = getSubpal(rgbPal, curGlove, i);
+				raster = makeRaster(eightbyeight, subpal);
+				ret[i][j] = makeSheet(raster);
+			}
 		}
 
 		raster = makeRaster(eightbyeight, ZAP_PALETTE);
-		ret[4] = makeSheet(raster);
+		ret[4][2] = ret[4][1] = ret[4][0] = makeSheet(raster);
 
 		return ret;
 	}
@@ -403,18 +435,13 @@ public final class SpriteManipulator {
 	public static void patchRom(String romTarget, ZSPRFile spr) throws IOException {
 		// get ROM data
 		byte[] romStream;
-		try (
-				FileInputStream fsInput = new FileInputStream(romTarget)
-		) {
+		try (FileInputStream fsInput = new FileInputStream(romTarget)) {
 			romStream = new byte[(int) fsInput.getChannel().size()];
 			fsInput.read(romStream);
 			fsInput.getChannel().position(0);
 			fsInput.close();
 
-			try (
-				FileOutputStream fsOut = new FileOutputStream(romTarget)
-			) {
-
+			try (FileOutputStream fsOut = new FileOutputStream(romTarget)) {
 				// grab relevant data from zspr file
 				byte[] sprData = spr.getSpriteData();
 				byte[] palData = spr.getPalData();
@@ -457,16 +484,19 @@ public final class SpriteManipulator {
 	/**
 	 * Reads a ROM to create a sprite data stream.
 	 * @param romPath
-	 * @return
 	 * @throws IOException
 	 * @throws FileNotFoundException
 	 */
-	public static byte[] getSprFromROM(String romPath) throws IOException {
+	public static byte[] getSpriteDataFromROM(String romPath) throws IOException {
 		byte[] ROM = readFile(romPath);
+		return getSpriteDataFromROM(ROM);
+	}
+
+	public static byte[] getSpriteDataFromROM(byte[] romData) {
 		byte[] ret = new byte[SPRITE_DATA_SIZE];
 
 		for (int i = 0; i < SPRITE_DATA_SIZE; i++) {
-			ret[i] = ROM[SPRITE_OFFSET + i];
+			ret[i] = romData[SPRITE_OFFSET + i];
 		}
 
 		return ret;
@@ -475,21 +505,23 @@ public final class SpriteManipulator {
 	/**
 	 * Reads a ROM to create a pal data stream.
 	 * @param romPath
-	 * @return
 	 * @throws IOException
 	 * @throws FileNotFoundException
 	 */
-	public static byte[] getPalFromROM(String romPath) throws IOException {
+	public static byte[] getPaletteDataFromROM(String romPath) throws IOException {
 		byte[] ROM = readFile(romPath);
+		return getPaletteDataFromROM(ROM);
+	}
+
+	public static byte[]getPaletteDataFromROM(byte[] romData) {
 		byte[] ret = new byte[PAL_DATA_SIZE];
 
 		for (int i = 0; i < PAL_DATA_SIZE; i++) {
-			ret[i] = ROM[PAL_OFFSET + i];
+			ret[i] = romData[PAL_OFFSET + i];
 		}
 
 		return ret;
 	}
-
 	/**
 	 * Reads a ROM to get gloves data
 	 * @param romPath
@@ -497,12 +529,16 @@ public final class SpriteManipulator {
 	 * @throws IOException
 	 * @throws FileNotFoundException
 	 */
-	public static byte[] getGlovesFromROM(String romPath) throws IOException {
+	public static byte[] getGlovesDataFromROM(String romPath) throws IOException {
 		byte[] ROM = readFile(romPath);
+		return getGlovesDataFromROM(ROM);
+	}
+
+	public static byte[] getGlovesDataFromROM(byte[] romData) {
 		byte[] ret = new byte[GLOVE_DATA_SIZE];
 
 		for (int i = 0; i < GLOVE_DATA_SIZE; i++) {
-			ret[i] = ROM[GLOVE_OFFSETS[i]];
+			ret[i] = romData[GLOVE_OFFSETS[i]];
 		}
 
 		return ret;
@@ -694,10 +730,7 @@ public final class SpriteManipulator {
 	public static void writeFile(byte[] map, String loc) throws IOException {
 		new File(loc); // create a file at directory
 
-		
-		try (
-			FileOutputStream fileOuputStream = new FileOutputStream(loc)
-		) {
+		try (FileOutputStream fileOuputStream = new FileOutputStream(loc)) {
 			fileOuputStream.write(map);
 		}
 	}
