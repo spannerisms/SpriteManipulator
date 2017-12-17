@@ -388,7 +388,6 @@ public class ZSPRFile {
 
 	/**
 	 * Checks its own privilege
-	 * @return
 	 * @throws BadChecksumException
 	 */
 	public boolean runSelfChecksum() throws ZSPRFormatException {
@@ -399,17 +398,18 @@ public class ZSPRFile {
 	/**
 	 * Should always return true if it works.
 	 * @param spr
-	 * @return
 	 * @throws BadChecksumException
 	 */
 	public static boolean runChecksum(byte[] spr) throws ZSPRFormatException {
 		byte[] myCksm = new byte[CHECKSUM_SIZE]; // stored checksum
+
 		for (int i = 0; i < CHECKSUM_SIZE; i++) {
 			myCksm[i] = spr[CHECKSUM_INDICES[i]];
 		}
 
 		byte[] chestsum = calcChecksum(spr); // test checksum
 		boolean badSum = false;
+
 		for (int i = 0; i < CHECKSUM_SIZE; i++) {
 			if (myCksm[i] != chestsum[i]) {
 				badSum = true;
@@ -425,13 +425,11 @@ public class ZSPRFile {
 	/**
 	 * Reads data from a filestream and creates a new {@code SPRFile} object.
 	 * @param path
-	 * @return
 	 * @throws IOException
 	 * @throws ObsoleteSPRFormatException
 	 * @throws BadChecksumException
 	 */
-	public static ZSPRFile readFile(String path) throws
-		IOException, ZSPRFormatException {
+	public static ZSPRFile readFile(String path) throws ZSPRFormatException, IOException{
 		if (!testFileType(path, EXTENSION)) {
 			throw new ZSPRFormatException("File is not a " + EXTENSION + " file.");
 		}
@@ -441,8 +439,7 @@ public class ZSPRFile {
 		// check for ZSPR file header
 		for (int i = 0; i < 4; i++) {
 			if (zSPR[i] != FLAG[i]) {
-				throw new ZSPRFormatException(
-						"Obsolete file format; please convert to " + ZSPR_SPEC);
+				throw new ZSPRFormatException("Obsolete file format; please convert to " + ZSPR_SPEC);
 			}
 		}
 
