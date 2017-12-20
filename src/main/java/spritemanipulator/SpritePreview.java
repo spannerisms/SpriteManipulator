@@ -9,7 +9,10 @@ import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.filechooser.FileView;
 
-public class SpritePreview extends FileView {
+/**
+ * @author fatmanspanda
+ */
+class SpritePreview extends FileView {
 	private static BufferedImage PALETTE_ICON; {
 		try {
 			PALETTE_ICON = ImageIO.read(SpritePreview.class.getResourceAsStream(

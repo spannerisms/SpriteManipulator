@@ -6,71 +6,15 @@ import java.util.ArrayList;
 import static spritemanipulator.SpriteManipulator.*;
 
 /**
- * Wrapper class for all data related to ZSPR files
+ * Manipulable object for {@code ZSPR} format sprite files.
+ * 
+ * @author fatmanspanda
  */
 public class ZSPRFile {
 	// class constants
 	public static final String EXTENSION = "zspr";
 
-	/**
-	 * <table>
-	 *   <tr>
-	 *     <th>Index</th>
-	 *     <th>Block</th>
-	 *     <th>Bytes</th>
-	 *   </th>
-	 *  <tr>
-	 *    <td>0</td>
-	 *    <td>flag</td>
-	 *    <td>4</td>
-	 *  </tr>
-	 *  <tr>
-	 *    <td>1</td>
-	 *    <td>version</td>
-	 *    <td>1</td>
-	 *  </tr>
-	 *  <tr>
-	 *    <td>2</td>
-	 *    <td>checksum</td>
-	 *    <td>4</td>
-	 *  </tr>
-	 *  <tr>
-	 *    <td>3</td>
-	 *    <td>sprite data offset</td>
-	 *    <td>4</td>
-	 *  </tr>
-	 *  <tr>
-	 *    <td>4</td>
-	 *    <td>sprite data size</td>
-	 *    <td>2</td>
-	 *  </tr>
-	 *  <tr>
-	 *    <td>5</td>
-	 *    <td>pal data offset</td>
-	 *    <td>4</td>
-	 *  </tr>
-	 *  <tr>
-	 *    <td>6</td>
-	 *    <td>pal data size</td>
-	 *    <td>2</td>
-	 *  </tr>
-	 *  <tr>
-	 *    <td>7</td>
-	 *    <td>sprite type</td>
-	 *    <td>2</td>
-	 *  </tr>
-	 *  <tr>
-	 *    <td>8</td>
-	 *    <td>reserved</td>
-	 *    <td>6</td>
-	 *  </tr>
-	 *  <tr>
-	 *    <td>9</td>
-	 *    <td>sprite name</td>
-	 *    <td>...</td>
-	 *  </tr>
-	 * </table>
-	 */
+	// file data
 	private static final int FLAG_SIZE = BYTE_ALLOTMENTS[0];
 	private static final int VERSION_SIZE = BYTE_ALLOTMENTS[1];
 	private static final int CHECKSUM_SIZE = BYTE_ALLOTMENTS[2];
@@ -81,7 +25,6 @@ public class ZSPRFile {
 	private static final int TYPE_SIZE = BYTE_ALLOTMENTS[7];
 	private static final int RESERVED_SIZE = BYTE_ALLOTMENTS[8];
 
-	// class constants
 	// data sizes for sprites
 	private static final short SPRITE_SIZE_SHORT = (short) SPRITE_DATA_SIZE; // cast to not get extra bytes
 	private static final short PAL_SIZE_SHORT = (short) PAL_DATA_SIZE; // cast to not get extra bytes
@@ -95,13 +38,22 @@ public class ZSPRFile {
 	private String authorNameROM;
 	private byte[] dataStream;
 
-	// default constructor
+	/**
+	 * Creates an empty {@code ZSPRFile} containing no data except for default glove colors.
+	 */
 	public ZSPRFile() {
 		// set gloves data to default just in case
 		glovesData = new byte[GLOVE_DATA_SIZE];
 	}
 
-	// constructor
+	/**
+	 * Creates a new {@code ZSPRFile}.
+	 * @param spriteData
+	 * @param palData
+	 * @param glovesData
+	 * @param spriteName
+	 * @param authorName
+	 */
 	public ZSPRFile(byte[] spriteData, byte[] palData, byte[] glovesData,
 			String spriteName, String authorName) {
 		this.spriteData = spriteData;
@@ -118,51 +70,93 @@ public class ZSPRFile {
 		this(spriteData, palData, glovesData, "Untitled", "Unknown");
 	}
 
+	/**
+	 * Sets the {@code spriteData} field.
+	 * @param spriteData
+	 */
 	public void setSpriteData(byte[] spriteData) {
 		this.spriteData = spriteData;
 	}
 
+	/**
+	 * @return {@code spriteData} field
+	 */
 	public byte[] getSpriteData() {
 		return this.spriteData;
 	}
 
+	/**
+	 * Sets the {@code palData} field.
+	 * @param palData
+	 */
 	public void setPalData(byte[] palData) {
 		this.palData = palData;
 	}
 
+	/**
+	 * @return {@code palData} field
+	 */
 	public byte[] getPalData() {
 		return this.palData;
 	}
 
+	/**
+	 * Sets the {@code glovesData} field.
+	 * @param glovesData
+	 */
 	public void setGlovesData(byte[] glovesData) {
 		this.glovesData = glovesData;
 	}
 
+	/**
+	 * @return {@code glovesData} field
+	 */
 	public byte[] getGlovesData() {
 		return this.glovesData;
 	}
 
+	/**
+	 * Sets the {@code spriteName} field.
+	 * @param spriteName
+	 */
 	public void setSpriteName(String spriteName) {
 		this.spriteName = spriteName;
 	}
 
+	/**
+	 * @return {@code spriteName} field
+	 */
 	public String getSpriteName() {
 		return this.spriteName;
 	}
 
+	/**
+	 * Sets the {@code authorName} field.
+	 * @param authorName
+	 */
 	public void setAuthorName(String authorName) {
 		this.authorName = authorName;
 	}
 
+	/**
+	 * @return {@code authorName} field
+	 */
 	public String getAuthorName() {
 		return this.authorName;
 	}
 	
+	/**
+	 * Sets the {@code authorNameROM} field.
+	 * @param authorNameROM
+	 */
 	public void setAuthorNameROM(String authorNameROM) {
 		this.authorNameROM = authorNameROM;
 		autoFixAuthorNameROM();
 	}
 
+	/**
+	 * @return {@code authorNameROM} field
+	 */
 	public String getAuthorNameROM() {
 		return this.authorNameROM;
 	}
@@ -197,6 +191,10 @@ public class ZSPRFile {
 		authorNameROM = autoName;
 	}
 
+	/**
+	 * Sets the name of the sprite to be the passed file name without an extension.
+	 * @param path
+	 */
 	public void setNameFromPath(String path) {
 		// find file name from path
 		int dl = path.lastIndexOf('.');
@@ -219,7 +217,7 @@ public class ZSPRFile {
 	}
 
 	/**
-	 * Gets data stream after forcing any changes
+	 * Gets data stream after forcing any changes with {@link #refreshDataStream()}.
 	 */
 	public byte[] getDataStream() {
 		refreshDataStream();
@@ -227,7 +225,7 @@ public class ZSPRFile {
 	}
 
 	/**
-	 * Creates a data stream for this sprite
+	 * Updates the data stream for this file.
 	 */
 	public void refreshDataStream() {
 		ArrayList<Byte> ret = new ArrayList<Byte>();
@@ -365,7 +363,7 @@ public class ZSPRFile {
 	}
 
 	/**
-	 * 
+	 * Checksum is based off of 
 	 */
 	private static byte[] calcChecksum(byte[] spr) {
 		byte[] ret = new byte[CHECKSUM_SIZE];
@@ -387,8 +385,13 @@ public class ZSPRFile {
 	}
 
 	/**
-	 * Checks its own privilege
-	 * @throws BadChecksumException
+	 * Validates the checksum of this file.
+	 * This function should always return true.
+	 * If the checksum is invalid, a {@linkplain ZSPRFormatException} will be thrown.
+	 * 
+	 * @throws ZSPRFormatException
+	 * 
+	 * @see #runChecksum(byte[])
 	 */
 	public boolean runSelfChecksum() throws ZSPRFormatException {
 		refreshDataStream();
@@ -396,9 +399,11 @@ public class ZSPRFile {
 	}
 
 	/**
-	 * Should always return true if it works.
+	 * Validates the checksum of a file.
+	 * This function should always return true.
+	 * If the checksum is invalid, a {@linkplain ZSPRFormatException} will be thrown.
 	 * @param spr
-	 * @throws BadChecksumException
+	 * @throws ZSPRFormatException
 	 */
 	public static boolean runChecksum(byte[] spr) throws ZSPRFormatException {
 		byte[] myCksm = new byte[CHECKSUM_SIZE]; // stored checksum
@@ -423,11 +428,10 @@ public class ZSPRFile {
 	}
 
 	/**
-	 * Reads data from a filestream and creates a new {@code SPRFile} object.
+	 * Reads data from a filestream and creates a new {@code ZSPRFile} object.
 	 * @param path
 	 * @throws IOException
-	 * @throws ObsoleteSPRFormatException
-	 * @throws BadChecksumException
+	 * @throws ZSPRFormatException
 	 */
 	public static ZSPRFile readFile(String path) throws ZSPRFormatException, IOException{
 		if (!testFileType(path, EXTENSION)) {

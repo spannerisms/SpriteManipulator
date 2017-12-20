@@ -10,13 +10,78 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+/**
+ * {@code SpriteManipulator} provides functions for converting LTTP sprite files
+ * to and from {@code PNG} and {@code ZSPR}.
+ * 
+ * @author fatmanspanda
+ */
 public final class SpriteManipulator {
 	// ALTTPNG
 	public static final String ALTTPNG_VERSION = "v1.8.0";
 
 	// ZSPR file format specifications
 	// Time stamp: 7 Nov 2017
-	public static final int[] BYTE_ALLOTMENTS = new int[] { // for calculating offsets
+	/**
+	 * <table>
+	 *   <tr>
+	 *     <th>Index</th>
+	 *     <th>Block</th>
+	 *     <th>Bytes</th>
+	 *   </th>
+	 *  <tr>
+	 *    <td>0</td>
+	 *    <td>flag</td>
+	 *    <td>4</td>
+	 *  </tr>
+	 *  <tr>
+	 *    <td>1</td>
+	 *    <td>version</td>
+	 *    <td>1</td>
+	 *  </tr>
+	 *  <tr>
+	 *    <td>2</td>
+	 *    <td>checksum</td>
+	 *    <td>4</td>
+	 *  </tr>
+	 *  <tr>
+	 *    <td>3</td>
+	 *    <td>sprite data offset</td>
+	 *    <td>4</td>
+	 *  </tr>
+	 *  <tr>
+	 *    <td>4</td>
+	 *    <td>sprite data size</td>
+	 *    <td>2</td>
+	 *  </tr>
+	 *  <tr>
+	 *    <td>5</td>
+	 *    <td>pal data offset</td>
+	 *    <td>4</td>
+	 *  </tr>
+	 *  <tr>
+	 *    <td>6</td>
+	 *    <td>pal data size</td>
+	 *    <td>2</td>
+	 *  </tr>
+	 *  <tr>
+	 *    <td>7</td>
+	 *    <td>sprite type</td>
+	 *    <td>2</td>
+	 *  </tr>
+	 *  <tr>
+	 *    <td>8</td>
+	 *    <td>reserved</td>
+	 *    <td>6</td>
+	 *  </tr>
+	 *  <tr>
+	 *    <td>9</td>
+	 *    <td>sprite name</td>
+	 *    <td>...</td>
+	 *  </tr>
+	 * </table>
+	 */
+	static final int[] BYTE_ALLOTMENTS = new int[] { // for calculating offsets
 		4, // 0: header
 		1, // 1: version
 		4, // 2: checksum
@@ -28,17 +93,18 @@ public final class SpriteManipulator {
 		6, // 8: reserved
 			// 9 : sprite name
 	};
-	public static final byte[] FLAG = { 'Z', 'S', 'P', 'R' };
-	public static final byte[] ZSPR_VERSION = { 1 }; // only 1 byte, but array for future proofing
+
+	static final byte[] FLAG = { 'Z', 'S', 'P', 'R' };
+	static final byte[] ZSPR_VERSION = { 1 }; // only 1 byte, but array for future proofing
 	public static final String ZSPR_VERSION_TAG = "v1.0";
 	public static final String ZSPR_SPEC =
 			String.format("ZSPR (.ZSPR) version %s specification", ZSPR_VERSION_TAG);
-	public static final int[] CHECKSUM_INDICES = getIndices(2); // where to find the checksum in file
-	public static final int[] SPRITE_OFFSET_INDICES = getIndices(3); // where to find the sprite offset in file
-	public static final int[] PAL_OFFSET_INDICES = getIndices(5); // where to find the palette offset in file
-	public static final int[] TYPE_INDICES = getIndices(7); // where to find the checksum in file
-	public static final int SPRITE_NAME_OFFSET = calcOffset(8);
-	public static final int NAME_ROM_MAX_LENGTH = 20;
+	static final int[] CHECKSUM_INDICES = getIndices(2); // where to find the checksum in file
+	static final int[] SPRITE_OFFSET_INDICES = getIndices(3); // where to find the sprite offset in file
+	static final int[] PAL_OFFSET_INDICES = getIndices(5); // where to find the palette offset in file
+	static final int[] TYPE_INDICES = getIndices(7); // where to find the checksum in file
+	static final int SPRITE_NAME_OFFSET = calcOffset(8);
+	static final int NAME_ROM_MAX_LENGTH = 20;
 
 	/**
 	 * Calculates the BEGINNING index based on the allotted bytes of all previous items;
@@ -94,13 +160,15 @@ public final class SpriteManipulator {
 	public static final int INDEXED_RASTER_SIZE = SPRITE_SHEET_WIDTH * SPRITE_SHEET_HEIGHT;
 	public static final int ABGR_RASTER_SIZE = INDEXED_RASTER_SIZE * 4;
 
-	// format of snes 4bpp {row (r), bit plane (b)}
-	// bit plane 0 indexed such that 1011 corresponds to 0123
+	/**
+	 *  Format of SNES 4BPP interlace {row (r), bit plane (b)}.
+	 *  Bit planes here are 0 indexed such that 1011 corresponds to 0123.
+	 */
 	public static final int BPPI[][] = new int[][] {
-			{0,0},{0,1},{1,0},{1,1},{2,0},{2,1},{3,0},{3,1},
-			{4,0},{4,1},{5,0},{5,1},{6,0},{6,1},{7,0},{7,1},
-			{0,2},{0,3},{1,2},{1,3},{2,2},{2,3},{3,2},{3,3},
-			{4,2},{4,3},{5,2},{5,3},{6,2},{6,3},{7,2},{7,3}
+			{0, 0}, {0, 1}, {1, 0}, {1, 1}, {2, 0}, {2, 1}, {3, 0}, {3, 1},
+			{4, 0}, {4, 1}, {5, 0}, {5, 1}, {6, 0}, {6, 1}, {7, 0}, {7, 1},
+			{0, 2}, {0, 3}, {1, 2}, {1, 3}, {2, 2}, {2, 3}, {3, 2}, {3, 3},
+			{4, 2}, {4, 3}, {5, 2}, {5, 3}, {6, 2}, {6, 3}, {7, 2}, {7, 3}
 	};
 
 	// A (currently) unchanging palette switched to by the game when link is electrocuted
@@ -138,6 +206,8 @@ public final class SpriteManipulator {
 	 * 
 	 * @param pixels - aray of color indices
 	 * @param pal - palette colors
+	 * 
+	 * @return An indexed {@code byte[]} raster of the image
 	 */
 	public static byte[] index(byte[] pixels, int[] pal) {
 		// all 8x8 squares, read left to right, top to bottom
@@ -272,6 +342,12 @@ public final class SpriteManipulator {
 		return ret;
 	}
 
+	/**
+	 * Converts 2 bytes of 5:5:5 data to an RGB array
+	 * @param c555a
+	 * @param c555b
+	 * @return
+	 */
 	public static byte[] getRGB(byte c555a, byte c555b) {
 		byte[] ret = new byte[3];
 
@@ -287,6 +363,10 @@ public final class SpriteManipulator {
 		return ret;
 	}
 
+	/**
+	 * Converts 2 bytes of 5:5:5 data to an RGB array
+	 * @param c555
+	 */
 	public static byte[] getRGB(byte[] c555) {
 		return getRGB(c555[0], c555[1]);
 	}
@@ -492,6 +572,10 @@ public final class SpriteManipulator {
 		return getSpriteDataFromROM(ROM);
 	}
 
+	/**
+	 * Reads a ROM stream to create a sprite data stream.
+	 * @param romData
+	 */
 	public static byte[] getSpriteDataFromROM(byte[] romData) {
 		byte[] ret = new byte[SPRITE_DATA_SIZE];
 
@@ -513,6 +597,10 @@ public final class SpriteManipulator {
 		return getPaletteDataFromROM(ROM);
 	}
 
+	/**
+	 * Reads a ROM stream to create a pal data stream.
+	 * @param romData
+	 */
 	public static byte[]getPaletteDataFromROM(byte[] romData) {
 		byte[] ret = new byte[PAL_DATA_SIZE];
 
@@ -522,10 +610,10 @@ public final class SpriteManipulator {
 
 		return ret;
 	}
+
 	/**
 	 * Reads a ROM to get gloves data
 	 * @param romPath
-	 * @return
 	 * @throws IOException
 	 * @throws FileNotFoundException
 	 */
@@ -534,6 +622,11 @@ public final class SpriteManipulator {
 		return getGlovesDataFromROM(ROM);
 	}
 
+	/**
+	 * Reads a ROM stream to get gloves data
+	 * @param romData
+	 * @return
+	 */
 	public static byte[] getGlovesDataFromROM(byte[] romData) {
 		byte[] ret = new byte[GLOVE_DATA_SIZE];
 
@@ -657,6 +750,10 @@ public final class SpriteManipulator {
 		return ret;
 	}
 
+	/**
+	 * Rounds a number down to the nearest multiple of 8.
+	 * @param v
+	 */
 	public static int roundVal(int v) {
 		int ret = (v / 8) * 8;
 		return ret;

@@ -6,7 +6,11 @@ import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileFilter;
 
 /**
- * Need alternative confirm messages
+ * Adds extra useful functionality to the {@link JFileChooser} class.
+ * Also includes custom icons for palettes and ROMS,
+ * and a visual preview of sprite files.
+ * 
+ * @author fatmanspanda
  */
 public class BetterJFileChooser extends JFileChooser {
 	private static final long serialVersionUID = -7581065406880416887L;
@@ -16,6 +20,11 @@ public class BetterJFileChooser extends JFileChooser {
 		this.setFileView(new SpritePreview());
 	}
 
+	/**
+	 * {@inheritDoc}
+	 * <br /><br />
+	 * Includes custom messages specific to patching ROM files.
+	 */
 	public void approveSelection() {
 		File f = getSelectedFile();
 		if(f.exists() && getDialogType() == SAVE_DIALOG) {
@@ -50,6 +59,9 @@ public class BetterJFileChooser extends JFileChooser {
 		super.approveSelection();
 	}
 
+	/**
+	 * Removes all {@link FileFilter} objects from this chooser.
+	 */
 	public void removeAllFilters() {
 		FileFilter[] exlist = this.getChoosableFileFilters();
 		for (FileFilter r : exlist) {
