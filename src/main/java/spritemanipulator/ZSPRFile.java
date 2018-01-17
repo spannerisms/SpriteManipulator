@@ -7,7 +7,7 @@ import static spritemanipulator.SpriteManipulator.*;
 
 /**
  * Manipulable object for {@code ZSPR} format sprite files.
- * 
+ *
  * @author fatmanspanda
  */
 public class ZSPRFile {
@@ -144,7 +144,7 @@ public class ZSPRFile {
 	public String getAuthorName() {
 		return this.authorName;
 	}
-	
+
 	/**
 	 * Sets the {@code authorNameROM} field.
 	 * @param authorNameROM
@@ -363,7 +363,7 @@ public class ZSPRFile {
 	}
 
 	/**
-	 * Checksum is based off of 
+	 * Checksum is based off of
 	 */
 	private static byte[] calcChecksum(byte[] spr) {
 		byte[] ret = new byte[CHECKSUM_SIZE];
@@ -388,9 +388,9 @@ public class ZSPRFile {
 	 * Validates the checksum of this file.
 	 * This function should always return true.
 	 * If the checksum is invalid, a {@linkplain ZSPRFormatException} will be thrown.
-	 * 
+	 *
 	 * @throws ZSPRFormatException
-	 * 
+	 *
 	 * @see #runChecksum(byte[])
 	 */
 	public boolean runSelfChecksum() throws ZSPRFormatException {
@@ -475,7 +475,7 @@ public class ZSPRFile {
 				nullFound = true;
 				continue;
 			}
-			char temp = (char) s; 
+			char temp = (char) s;
 			spriteName += temp;
 		} while (!nullFound);
 
@@ -497,7 +497,7 @@ public class ZSPRFile {
 				nullFound = true;
 				continue;
 			}
-			char temp = (char) s; 
+			char temp = (char) s;
 			authorName += temp;
 		} while (!nullFound);
 
@@ -514,7 +514,7 @@ public class ZSPRFile {
 				nullFound = true;
 				continue;
 			}
-			char temp = (char) b; 
+			char temp = (char) b;
 			authorNameROM += temp;
 		} while (!nullFound);
 

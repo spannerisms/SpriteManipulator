@@ -13,7 +13,7 @@ import java.nio.ByteBuffer;
 /**
  * {@code SpriteManipulator} provides functions for converting LTTP sprite files
  * to and from {@code PNG} and {@code ZSPR}.
- * 
+ *
  * @author fatmanspanda
  */
 public final class SpriteManipulator {
@@ -203,10 +203,10 @@ public final class SpriteManipulator {
 	 * If a color matches an index that belongs to one of the latter 3 mails
 	 * but does not match anything in green mail,
 	 * then it is treated as the color at the corresponding index of green mail.
-	 * 
+	 *
 	 * @param pixels - aray of color indices
 	 * @param pal - palette colors
-	 * 
+	 *
 	 * @return An indexed {@code byte[]} raster of the image
 	 */
 	public static byte[] index(byte[] pixels, int[] pal) {
@@ -237,7 +237,7 @@ public final class SpriteManipulator {
 
 	/**
 	 * Turn the image into an array of 8x8 blocks.
-	 * 
+	 *
 	 * @param pixels - aray of color indices
 	 * @return {@code byte[][][]} representing the image as a grid of color indices
 	 */
@@ -834,7 +834,7 @@ public final class SpriteManipulator {
 
 	/**
 	 * Test a file against a single extension.
-	 * 
+	 *
 	 * @param s - file name or extension
 	 * @param type - extension
 	 * @return {@code true} if extension is matched
@@ -846,7 +846,7 @@ public final class SpriteManipulator {
 
 	/**
 	 * Test a file against multiple extensions
-	 * 
+	 *
 	 * @param s - file name or extension
 	 * @param type - extensions
 	 * @return {@code true} if extension is matched

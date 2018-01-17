@@ -9,7 +9,7 @@ import javax.swing.filechooser.FileFilter;
  * Adds extra useful functionality to the {@link JFileChooser} class.
  * Also includes custom icons for palettes and ROMS,
  * and a visual preview of sprite files.
- * 
+ *
  * @author fatmanspanda
  */
 public class BetterJFileChooser extends JFileChooser {

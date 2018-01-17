@@ -2,7 +2,7 @@ package spritemanipulator;
 
 /**
  * A generic exception for problems specific to sprite files.
- * 
+ *
  * @author fatmanspanda
  */
 public class ZSPRFormatException extends Exception {
